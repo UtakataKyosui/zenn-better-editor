@@ -161,6 +161,19 @@ button {
   margin-top: 20px;
 }
 
+.fused-canvas {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.9fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.fused-canvas__editor,
+.fused-canvas__render {
+  display: grid;
+  gap: 12px;
+}
+
 .panel-header,
 .source-actions,
 .toolbar,
@@ -462,6 +475,10 @@ button {
     monospace;
 }
 
+.source-editor--fused {
+  min-height: 640px;
+}
+
 .source-editor:focus,
 .visual-inline-input:focus,
 .visual-heading__input:focus,
@@ -473,6 +490,10 @@ button {
 
 @media (max-width: 960px) {
   .workspace-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fused-canvas {
     grid-template-columns: 1fr;
   }
 

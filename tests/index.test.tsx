@@ -1,58 +1,68 @@
 import { afterEach, expect, test } from '@rstest/core';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import App from '../src/App';
 
 afterEach(() => {
   cleanup();
 });
 
-test('renders the live wysiwyg workspace', async () => {
+test('renders the markdown-first workspace', async () => {
   render(<App />);
 
   expect(
     await screen.findByRole('heading', { name: 'Rich Zenn Editor' }),
   ).toBeInTheDocument();
-  expect(screen.getByRole('heading', { name: 'Live article canvas' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Markdown editor' })).toBeInTheDocument();
+  expect(screen.getByLabelText('Markdown input')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Open .md' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
-  expect(screen.getByText('Markdown synced internally')).toBeInTheDocument();
+  expect(screen.getByText('Markdown direct input')).toBeInTheDocument();
 });
 
-test('renders zenn blocks as editable visual controls in the main canvas', async () => {
+test('renders the zenn html preview beside the markdown editor', async () => {
   render(<App />);
 
-  expect(await screen.findByLabelText('Message body')).toHaveValue(
-    'このブロックは Zenn の message 記法です。注意書きや補足に使います。',
-  );
-  expect(screen.getByLabelText('Details title')).toHaveValue(
-    'ローカルプレビューで開いて確認',
-  );
-  expect(screen.getByLabelText('Card URL')).toHaveValue(
-    'https://zenn.dev/zenn/articles/markdown-guide',
-  );
-  expect(screen.getByLabelText('Quote text')).toHaveValue(
-    '引用ブロックも同時に確認できます。',
-  );
-});
+  expect(await screen.findByText('Rendered with zenn-markdown-html')).toBeInTheDocument();
 
-test('updates the live canvas directly when a visual block is edited', async () => {
-  render(<App />);
+  const renderSection = screen
+    .getByText('Rendered with zenn-markdown-html')
+    .closest('section');
 
-  const headings = await screen.findAllByLabelText('Heading text');
-  const heading = headings[0];
-  const paragraph = screen.getByLabelText('Paragraph text');
+  expect(renderSection).not.toBeNull();
 
-  fireEvent.change(heading, {
-    target: { value: 'Applied title' },
+  const preview = within(renderSection as HTMLElement);
+
+  await waitFor(() => {
+    expect(preview.getByText('ローカルプレビュー確認用のサンプル')).toBeInTheDocument();
   });
-  fireEvent.change(paragraph, {
-    target: { value: '本文です。' },
+});
+
+test('updates the rendered preview when markdown changes', async () => {
+  render(<App />);
+
+  const source = await screen.findByLabelText('Markdown input');
+
+  fireEvent.change(source, {
+    target: {
+      value: '# Applied title\n\n本文です。',
+    },
   });
 
   await waitFor(() => {
-    expect(screen.getByDisplayValue('Applied title')).toBeInTheDocument();
+    expect(source).toHaveValue('# Applied title\n\n本文です。');
   });
 
-  expect(screen.getByDisplayValue('本文です。')).toBeInTheDocument();
-  expect(screen.getByText('Live canvas updated')).toBeInTheDocument();
+  const renderSection = screen
+    .getByText('Rendered with zenn-markdown-html')
+    .closest('section');
+
+  expect(renderSection).not.toBeNull();
+
+  const preview = within(renderSection as HTMLElement);
+
+  await waitFor(() => {
+    expect(preview.getByText('Applied title')).toBeInTheDocument();
+  });
+
+  expect(preview.getByText('本文です。')).toBeInTheDocument();
 });
