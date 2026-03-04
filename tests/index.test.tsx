@@ -13,9 +13,9 @@ test('renders the live wysiwyg workspace', async () => {
     await screen.findByRole('heading', { name: 'Rich Zenn Editor' }),
   ).toBeInTheDocument();
   expect(screen.getByRole('heading', { name: 'Live article canvas' })).toBeInTheDocument();
-  expect(screen.getByLabelText('Current article markdown')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Open .md' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
+  expect(screen.getByText('Markdown synced internally')).toBeInTheDocument();
 });
 
 test('renders zenn blocks as editable visual controls in the main canvas', async () => {
@@ -35,26 +35,24 @@ test('renders zenn blocks as editable visual controls in the main canvas', async
   );
 });
 
-test('applies source markdown back into the live canvas', async () => {
+test('updates the live canvas directly when a visual block is edited', async () => {
   render(<App />);
 
-  const source = await screen.findByLabelText('Current article markdown');
+  const headings = await screen.findAllByLabelText('Heading text');
+  const heading = headings[0];
+  const paragraph = screen.getByLabelText('Paragraph text');
 
-  fireEvent.change(source, {
-    target: {
-      value: '# Applied title\n\n本文です。',
-    },
+  fireEvent.change(heading, {
+    target: { value: 'Applied title' },
   });
-
-  expect(screen.getByText('Source differs from live canvas')).toBeInTheDocument();
-
-  fireEvent.click(screen.getByRole('button', { name: 'Apply to live canvas' }));
+  fireEvent.change(paragraph, {
+    target: { value: '本文です。' },
+  });
 
   await waitFor(() => {
-    expect(screen.getByText('Source is in sync')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Applied title')).toBeInTheDocument();
   });
 
-  expect(screen.getByText('Applied source to live canvas')).toBeInTheDocument();
-  expect(screen.getByLabelText('Heading text')).toHaveValue('Applied title');
-  expect(screen.getByLabelText('Paragraph text')).toHaveValue('本文です。');
+  expect(screen.getByDisplayValue('本文です。')).toBeInTheDocument();
+  expect(screen.getByText('Live canvas updated')).toBeInTheDocument();
 });

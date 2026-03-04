@@ -357,18 +357,15 @@ const Tiptap = () => {
   const initialDocument = useMemo(() => parseMarkdownDocument(initialMarkdown), [initialMarkdown]);
   const [visualDocument, setVisualDocument] = useState<VisualDocument>(initialDocument);
   const [editorMarkdown, setEditorMarkdown] = useState(() => serializeDocument(initialDocument));
-  const [sourceMarkdown, setSourceMarkdown] = useState(() => serializeDocument(initialDocument));
-  const [isSourceDirty, setIsSourceDirty] = useState(false);
   const [documentName, setDocumentName] = useState('untitled.md');
   const [saveStatus, setSaveStatus] = useState('Live canvas active');
   const [previewUrl, setPreviewUrl] = useState('');
-  const sourceDirtyRef = useRef(false);
   const fileHandleRef = useRef<FileSystemFileHandle | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    getStorage()?.setItem(AUTOSAVE_STORAGE_KEY, sourceMarkdown);
-  }, [sourceMarkdown]);
+    getStorage()?.setItem(AUTOSAVE_STORAGE_KEY, editorMarkdown);
+  }, [editorMarkdown]);
 
   const commitVisualDocument = (nextDocument: VisualDocument, nextStatus = 'Live canvas updated') => {
     const nextMarkdown = serializeDocument(nextDocument);
@@ -376,21 +373,14 @@ const Tiptap = () => {
     setVisualDocument(nextDocument);
     setEditorMarkdown(nextMarkdown);
     setSaveStatus(nextStatus);
-
-    if (!sourceDirtyRef.current) {
-      setSourceMarkdown(nextMarkdown);
-    }
   };
 
   const loadMarkdownDocument = (markdown: string, nextName: string) => {
     const nextDocument = parseMarkdownDocument(markdown);
     const normalizedMarkdown = serializeDocument(nextDocument);
 
-    sourceDirtyRef.current = false;
-    setIsSourceDirty(false);
     setVisualDocument(nextDocument);
     setEditorMarkdown(normalizedMarkdown);
-    setSourceMarkdown(normalizedMarkdown);
     setDocumentName(nextName);
     setSaveStatus(`Loaded ${nextName}`);
   };
@@ -417,44 +407,13 @@ const Tiptap = () => {
     fileInputRef.current?.click();
   };
 
-  const applySourceToEditor = () => {
-    const nextDocument = parseMarkdownDocument(sourceMarkdown);
-
-    sourceDirtyRef.current = false;
-    setIsSourceDirty(false);
-    setVisualDocument(nextDocument);
-    const normalizedMarkdown = serializeDocument(nextDocument);
-    setEditorMarkdown(normalizedMarkdown);
-    setSourceMarkdown(normalizedMarkdown);
-    setSaveStatus('Applied source to live canvas');
-  };
-
-  const resetSource = () => {
-    sourceDirtyRef.current = false;
-    setIsSourceDirty(false);
-    setSourceMarkdown(editorMarkdown);
-    setSaveStatus('Source reset to live canvas');
-  };
-
-  const updateSource = (value: string) => {
-    sourceDirtyRef.current = value !== editorMarkdown;
-    setIsSourceDirty(sourceDirtyRef.current);
-    setSourceMarkdown(value);
-    setSaveStatus(sourceDirtyRef.current ? 'Unsaved source edits' : 'Live canvas active');
-  };
-
-  const insertSnippet = (snippet: string) => {
-    const next = `${sourceMarkdown.trimEnd()}\n\n${snippet}\n`;
-    updateSource(next);
-  };
-
   const createNewDraft = () => {
     fileHandleRef.current = null;
     loadMarkdownDocument(INITIAL_MARKDOWN, 'untitled.md');
   };
 
   const downloadDocument = () => {
-    const blob = new Blob([sourceMarkdown], { type: 'text/markdown;charset=utf-8' });
+    const blob = new Blob([editorMarkdown], { type: 'text/markdown;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
 
@@ -467,12 +426,10 @@ const Tiptap = () => {
 
   const saveToHandle = async (handle: FileSystemFileHandle) => {
     const writable = await handle.createWritable();
-    await writable.write(sourceMarkdown);
+    await writable.write(editorMarkdown);
     await writable.close();
     fileHandleRef.current = handle;
     setDocumentName(handle.name);
-    sourceDirtyRef.current = false;
-    setIsSourceDirty(false);
     setSaveStatus(`Saved ${handle.name}`);
   };
 
@@ -563,7 +520,7 @@ const Tiptap = () => {
           <span>{wordCount} words</span>
           <span>{readingMinutes} min read</span>
           <span>{visualDocument.blocks.length} blocks</span>
-          <span>{isSourceDirty ? 'Source differs from live canvas' : 'Source is in sync'}</span>
+          <span>Markdown synced internally</span>
         </div>
       </section>
 
@@ -803,46 +760,6 @@ const Tiptap = () => {
               ))}
             </div>
           </div>
-        </section>
-
-        <section className="panel">
-          <header className="panel-header">
-            <div>
-              <p className="panel-label">Markdown source</p>
-              <h2>Zenn-safe output</h2>
-            </div>
-            <div className="source-actions">
-              <button type="button" onClick={applySourceToEditor} disabled={!isSourceDirty}>
-                Apply to live canvas
-              </button>
-              <button type="button" onClick={resetSource} disabled={!isSourceDirty}>
-                Reset
-              </button>
-            </div>
-          </header>
-
-          <div className="snippet-bar" aria-label="Zenn snippets">
-            <button type="button" onClick={() => insertSnippet(createBlock('message').text ? ':::message\n補足や注意書きを入力します。\n:::' : '')}>
-              + Message
-            </button>
-            <button type="button" onClick={() => insertSnippet(':::details 補足情報\n折りたたみ中の内容です。\n:::')}>
-              + Details
-            </button>
-            <button type="button" onClick={() => insertSnippet('@[card](https://zenn.dev)')}>
-              + Link Card
-            </button>
-          </div>
-
-          <label className="source-label" htmlFor="markdown-source">
-            Current article markdown
-          </label>
-          <textarea
-            id="markdown-source"
-            className="source-editor"
-            value={sourceMarkdown}
-            onChange={(event) => updateSource(event.target.value)}
-            spellCheck={false}
-          />
         </section>
       </section>
 
