@@ -2,9 +2,7 @@ import './App.css';
 import Tiptap from './tiptap/tiptap-app';
 
 const App = () => {
-  return (
-    <Tiptap />
-  );
+  return <Tiptap />;
 };
 
 export default App;

@@ -161,17 +161,36 @@ button {
   margin-top: 20px;
 }
 
-.fused-canvas {
+.hybrid-surface {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.9fr);
-  gap: 20px;
-  align-items: start;
+  gap: 18px;
+  border-radius: 18px;
+  padding: 20px;
+  background: #fff;
 }
 
-.fused-canvas__editor,
-.fused-canvas__render {
+.hybrid-surface__input,
+.hybrid-surface__render {
   display: grid;
-  gap: 12px;
+  gap: 10px;
+}
+
+.hybrid-surface__preview {
+  min-height: 320px;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  padding: 28px;
+  background: #fff;
+}
+
+.hybrid-surface__divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(148, 163, 184, 0),
+    rgba(148, 163, 184, 0.55),
+    rgba(148, 163, 184, 0)
+  );
 }
 
 .panel-header,
@@ -476,7 +495,11 @@ button {
 }
 
 .source-editor--fused {
-  min-height: 640px;
+  min-height: 320px;
+}
+
+.source-editor--frontmatter {
+  min-height: 180px;
 }
 
 .source-editor:focus,
@@ -493,8 +516,9 @@ button {
     grid-template-columns: 1fr;
   }
 
-  .fused-canvas {
-    grid-template-columns: 1fr;
+  .source-editor--fused,
+  .hybrid-surface__preview {
+    min-height: 280px;
   }
 
   .editor-shell {
