@@ -1,0 +1,1 @@
+Codebase uses TypeScript with React function components. Existing code mixes styles, but package scripts and existing tests indicate Biome formatting/checking should be the source of truth. Prefer maintainable, accessible React code, minimal comments, and repo-local patterns over introducing new abstractions prematurely.

@@ -1,0 +1,1 @@
+Core commands:\n- pnpm install\n- pnpm run dev\n- pnpm run build\n- pnpm run preview\n- pnpm run test\n- pnpm run test:watch\n- pnpm run format\n- pnpm run check\nUseful system commands on this Linux environment: ls, cd, rg, find, git, sed.

@@ -1,0 +1,1 @@
+After changes, run the relevant verification commands when possible: pnpm run test for behavior, pnpm run check for Biome checks/fixes, and pnpm run build for production validation. If a specific command cannot run, report that explicitly.
