@@ -1,49 +1,41 @@
 import { afterEach, expect, test } from '@rstest/core';
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-  within,
-} from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import App from '../src/App';
 
 afterEach(() => {
   cleanup();
 });
 
-test('renders the editor workspace', async () => {
+test('renders the live wysiwyg workspace', async () => {
   render(<App />);
 
   expect(
     await screen.findByRole('heading', { name: 'Rich Zenn Editor' }),
   ).toBeInTheDocument();
-  expect(screen.getByRole('textbox', { name: 'Current article markdown' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Live article canvas' })).toBeInTheDocument();
+  expect(screen.getByLabelText('Current article markdown')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Open .md' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
 });
 
-test('renders zenn-specific blocks in the local preview', async () => {
+test('renders zenn blocks as editable visual controls in the main canvas', async () => {
   render(<App />);
 
-  expect(await screen.findByRole('button', { name: 'Local preview' })).toBeInTheDocument();
-
-  const previewPanel = screen
-    .getByRole('heading', { name: 'zenn-cli bridge' })
-    .closest('section');
-
-  expect(previewPanel).not.toBeNull();
-
-  const preview = within(previewPanel as HTMLElement);
-
-  expect(preview.getByText('message')).toBeInTheDocument();
-  expect(preview.getByText('ローカルプレビューで開いて確認')).toBeInTheDocument();
-  expect(preview.getByText('link card')).toBeInTheDocument();
-  expect(preview.getByText('引用ブロックも同時に確認できます。')).toBeInTheDocument();
+  expect(await screen.findByLabelText('Message body')).toHaveValue(
+    'このブロックは Zenn の message 記法です。注意書きや補足に使います。',
+  );
+  expect(screen.getByLabelText('Details title')).toHaveValue(
+    'ローカルプレビューで開いて確認',
+  );
+  expect(screen.getByLabelText('Card URL')).toHaveValue(
+    'https://zenn.dev/zenn/articles/markdown-guide',
+  );
+  expect(screen.getByLabelText('Quote text')).toHaveValue(
+    '引用ブロックも同時に確認できます。',
+  );
 });
 
-test('marks source as dirty and applies markdown changes back to the editor', async () => {
+test('applies source markdown back into the live canvas', async () => {
   render(<App />);
 
   const source = await screen.findByLabelText('Current article markdown');
@@ -54,15 +46,15 @@ test('marks source as dirty and applies markdown changes back to the editor', as
     },
   });
 
-  expect(screen.getByText('Source differs from editor')).toBeInTheDocument();
+  expect(screen.getByText('Source differs from live canvas')).toBeInTheDocument();
 
-  fireEvent.click(screen.getByRole('button', { name: 'Apply to editor' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Apply to live canvas' }));
 
   await waitFor(() => {
     expect(screen.getByText('Source is in sync')).toBeInTheDocument();
   });
 
-  expect(screen.getByText('Applied source to editor')).toBeInTheDocument();
-  expect(screen.getAllByText('Applied title')).toHaveLength(2);
-  expect(screen.getAllByText('本文です。')).toHaveLength(2);
+  expect(screen.getByText('Applied source to live canvas')).toBeInTheDocument();
+  expect(screen.getByLabelText('Heading text')).toHaveValue('Applied title');
+  expect(screen.getByLabelText('Paragraph text')).toHaveValue('本文です。');
 });

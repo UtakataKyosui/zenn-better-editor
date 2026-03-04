@@ -1,7 +1,4 @@
-import { Markdown } from '@tiptap/markdown';
-import StarterKit from '@tiptap/starter-kit';
-import { EditorContent, useEditor } from '@tiptap/react';
-import { useDeferredValue, useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 const AUTOSAVE_STORAGE_KEY = 'rich-zenn-editor:draft';
 
@@ -56,28 +53,20 @@ const MARKDOWN_FILE_TYPES = [
   },
 ];
 
-const ZENN_SNIPPETS = [
-  {
-    label: 'Message',
-    snippet: `
-:::message
-読者に伝えたい補足を書きます。
-:::
-`.trim(),
-  },
-  {
-    label: 'Details',
-    snippet: `
-:::details 補足情報
-ここに折りたたみコンテンツを書きます。
-:::
-`.trim(),
-  },
-  {
-    label: 'Link Card',
-    snippet: '@[card](https://zenn.dev)',
-  },
-];
+type Block =
+  | { type: 'heading'; level: 1 | 2 | 3; text: string }
+  | { type: 'paragraph'; text: string }
+  | { type: 'message'; text: string }
+  | { type: 'details'; title: string; text: string }
+  | { type: 'card'; url: string }
+  | { type: 'quote'; text: string }
+  | { type: 'list'; items: string[] }
+  | { type: 'code'; language: string; code: string };
+
+type VisualDocument = {
+  frontmatter: string;
+  blocks: Block[];
+};
 
 const countWords = (value: string) => {
   const normalized = value
@@ -93,31 +82,47 @@ const countWords = (value: string) => {
   return normalized.split(/\s+/).length;
 };
 
-const escapeHtml = (value: string) => {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
+const getStorage = () => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const { localStorage } = window;
+
+  if (
+    typeof localStorage?.getItem !== 'function' ||
+    typeof localStorage?.setItem !== 'function'
+  ) {
+    return null;
+  }
+
+  return localStorage;
 };
 
-const renderInlineMarkdown = (value: string) => {
-  return escapeHtml(value)
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>')
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+const getInitialMarkdown = () => {
+  return getStorage()?.getItem(AUTOSAVE_STORAGE_KEY) ?? INITIAL_MARKDOWN;
 };
 
-const renderParagraph = (value: string) => {
-  return `<p>${renderInlineMarkdown(value)}</p>`;
+const splitFrontmatter = (markdown: string) => {
+  const match = markdown.match(/^---\n([\s\S]*?)\n---\n?/);
+
+  if (!match) {
+    return {
+      frontmatter: '',
+      body: markdown.trim(),
+    };
+  }
+
+  return {
+    frontmatter: match[1].trim(),
+    body: markdown.slice(match[0].length).trim(),
+  };
 };
 
-const renderZennPreview = (markdown: string) => {
-  const withoutFrontmatter = markdown.replace(/^---[\s\S]*?---\n?/m, '').trim();
-  const lines = withoutFrontmatter.split('\n');
-  const chunks: string[] = [];
+const parseMarkdownDocument = (markdown: string): VisualDocument => {
+  const { frontmatter, body } = splitFrontmatter(markdown);
+  const lines = body ? body.split('\n') : [];
+  const blocks: Block[] = [];
   let index = 0;
 
   while (index < lines.length) {
@@ -143,19 +148,20 @@ const renderZennPreview = (markdown: string) => {
         index += 1;
       }
 
-      const code = escapeHtml(codeLines.join('\n'));
-      chunks.push(
-        `<pre class="zenn-code-block"><code data-language="${escapeHtml(language)}">${code}</code></pre>`,
-      );
+      blocks.push({
+        type: 'code',
+        language,
+        code: codeLines.join('\n'),
+      });
       continue;
     }
 
     if (line.startsWith(':::message')) {
-      const body: string[] = [];
+      const bodyLines: string[] = [];
       index += 1;
 
       while (index < lines.length && lines[index]?.trim() !== ':::') {
-        body.push(lines[index] ?? '');
+        bodyLines.push(lines[index] ?? '');
         index += 1;
       }
 
@@ -163,22 +169,20 @@ const renderZennPreview = (markdown: string) => {
         index += 1;
       }
 
-      chunks.push(`
-        <aside class="zenn-message-block">
-          <div class="zenn-message-block__label">message</div>
-          <div>${renderParagraph(body.join(' ').trim())}</div>
-        </aside>
-      `);
+      blocks.push({
+        type: 'message',
+        text: bodyLines.join('\n').trim(),
+      });
       continue;
     }
 
     if (line.startsWith(':::details')) {
+      const bodyLines: string[] = [];
       const title = line.replace(':::details', '').trim() || 'Details';
-      const body: string[] = [];
       index += 1;
 
       while (index < lines.length && lines[index]?.trim() !== ':::') {
-        body.push(lines[index] ?? '');
+        bodyLines.push(lines[index] ?? '');
         index += 1;
       }
 
@@ -186,49 +190,59 @@ const renderZennPreview = (markdown: string) => {
         index += 1;
       }
 
-      chunks.push(`
-        <details class="zenn-details-block" open>
-          <summary>${renderInlineMarkdown(title)}</summary>
-          ${renderParagraph(body.join(' ').trim())}
-        </details>
-      `);
+      blocks.push({
+        type: 'details',
+        title,
+        text: bodyLines.join('\n').trim(),
+      });
       continue;
     }
 
     const cardMatch = line.match(/^@\[card]\((https?:\/\/[^\s)]+)\)$/);
     if (cardMatch) {
-      const url = cardMatch[1];
-      chunks.push(`
-        <a class="zenn-card-block" href="${escapeHtml(url)}" target="_blank" rel="noreferrer">
-          <span class="zenn-card-block__eyebrow">link card</span>
-          <strong>${escapeHtml(url.replace(/^https?:\/\//, ''))}</strong>
-          <span>${escapeHtml(url)}</span>
-        </a>
-      `);
+      blocks.push({
+        type: 'card',
+        url: cardMatch[1],
+      });
       index += 1;
       continue;
     }
 
     if (line.startsWith('# ')) {
-      chunks.push(`<h1>${renderInlineMarkdown(line.slice(2))}</h1>`);
+      blocks.push({
+        type: 'heading',
+        level: 1,
+        text: line.slice(2),
+      });
       index += 1;
       continue;
     }
 
     if (line.startsWith('## ')) {
-      chunks.push(`<h2>${renderInlineMarkdown(line.slice(3))}</h2>`);
+      blocks.push({
+        type: 'heading',
+        level: 2,
+        text: line.slice(3),
+      });
       index += 1;
       continue;
     }
 
     if (line.startsWith('### ')) {
-      chunks.push(`<h3>${renderInlineMarkdown(line.slice(4))}</h3>`);
+      blocks.push({
+        type: 'heading',
+        level: 3,
+        text: line.slice(4),
+      });
       index += 1;
       continue;
     }
 
     if (line.startsWith('> ')) {
-      chunks.push(`<blockquote>${renderParagraph(line.slice(2))}</blockquote>`);
+      blocks.push({
+        type: 'quote',
+        text: line.slice(2),
+      });
       index += 1;
       continue;
     }
@@ -237,11 +251,14 @@ const renderZennPreview = (markdown: string) => {
       const items: string[] = [];
 
       while (index < lines.length && lines[index]?.trim().startsWith('- ')) {
-        items.push(`<li>${renderInlineMarkdown(lines[index]!.trim().slice(2))}</li>`);
+        items.push(lines[index]!.trim().slice(2));
         index += 1;
       }
 
-      chunks.push(`<ul>${items.join('')}</ul>`);
+      blocks.push({
+        type: 'list',
+        items,
+      });
       continue;
     }
 
@@ -267,109 +284,115 @@ const renderZennPreview = (markdown: string) => {
       index += 1;
     }
 
-    chunks.push(renderParagraph(paragraphLines.join(' ')));
+    blocks.push({
+      type: 'paragraph',
+      text: paragraphLines.join('\n'),
+    });
   }
 
-  return chunks.join('');
+  return {
+    frontmatter,
+    blocks,
+  };
 };
 
-const getStorage = () => {
-  if (typeof window === 'undefined') {
-    return null;
+const serializeDocument = (document: VisualDocument) => {
+  const body = document.blocks
+    .map((block) => {
+      switch (block.type) {
+        case 'heading':
+          return `${'#'.repeat(block.level)} ${block.text.trim()}`;
+        case 'paragraph':
+          return block.text.trim();
+        case 'message':
+          return `:::message\n${block.text.trim()}\n:::`;
+        case 'details':
+          return `:::details ${block.title.trim()}\n${block.text.trim()}\n:::`;
+        case 'card':
+          return `@[card](${block.url.trim()})`;
+        case 'quote':
+          return `> ${block.text.trim()}`;
+        case 'list':
+          return block.items
+            .map((item) => `- ${item.trim()}`)
+            .join('\n');
+        case 'code':
+          return `\`\`\`${block.language.trim()}\n${block.code}\n\`\`\``;
+      }
+    })
+    .filter(Boolean)
+    .join('\n\n')
+    .trim();
+
+  if (!document.frontmatter.trim()) {
+    return body;
   }
 
-  const { localStorage } = window;
-
-  if (
-    typeof localStorage?.getItem !== 'function' ||
-    typeof localStorage?.setItem !== 'function'
-  ) {
-    return null;
-  }
-
-  return localStorage;
+  return `---\n${document.frontmatter.trim()}\n---\n\n${body}`.trim();
 };
 
-const getInitialMarkdown = () => {
-  return getStorage()?.getItem(AUTOSAVE_STORAGE_KEY) ?? INITIAL_MARKDOWN;
+const createBlock = (type: Block['type']): Block => {
+  switch (type) {
+    case 'heading':
+      return { type: 'heading', level: 2, text: '新しい見出し' };
+    case 'paragraph':
+      return { type: 'paragraph', text: 'ここに本文を書きます。' };
+    case 'message':
+      return { type: 'message', text: '補足や注意書きを入力します。' };
+    case 'details':
+      return { type: 'details', title: '補足情報', text: '折りたたみ中の内容です。' };
+    case 'card':
+      return { type: 'card', url: 'https://zenn.dev' };
+    case 'quote':
+      return { type: 'quote', text: '引用文を入力します。' };
+    case 'list':
+      return { type: 'list', items: ['項目 1', '項目 2'] };
+    case 'code':
+      return { type: 'code', language: 'ts', code: "export const sample = 'zenn';" };
+  }
 };
 
 const Tiptap = () => {
   const initialMarkdown = getInitialMarkdown();
-  const [editorMarkdown, setEditorMarkdown] = useState(initialMarkdown);
-  const [sourceMarkdown, setSourceMarkdown] = useState(initialMarkdown);
+  const initialDocument = useMemo(() => parseMarkdownDocument(initialMarkdown), [initialMarkdown]);
+  const [visualDocument, setVisualDocument] = useState<VisualDocument>(initialDocument);
+  const [editorMarkdown, setEditorMarkdown] = useState(() => serializeDocument(initialDocument));
+  const [sourceMarkdown, setSourceMarkdown] = useState(() => serializeDocument(initialDocument));
   const [isSourceDirty, setIsSourceDirty] = useState(false);
-  const [selectionText, setSelectionText] = useState('');
   const [documentName, setDocumentName] = useState('untitled.md');
-  const [saveStatus, setSaveStatus] = useState('Local draft active');
-  const [previewMode, setPreviewMode] = useState<'local' | 'iframe'>('local');
-  const [previewUrl, setPreviewUrl] = useState('http://localhost:8000');
+  const [saveStatus, setSaveStatus] = useState('Live canvas active');
+  const [previewUrl, setPreviewUrl] = useState('');
   const sourceDirtyRef = useRef(false);
   const fileHandleRef = useRef<FileSystemFileHandle | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const deferredSourceMarkdown = useDeferredValue(sourceMarkdown);
-  const previewHtml = renderZennPreview(deferredSourceMarkdown);
-
-  const editor = useEditor({
-    extensions: [StarterKit, Markdown],
-    content: initialMarkdown,
-    contentType: 'markdown',
-    immediatelyRender: false,
-    editorProps: {
-      attributes: {
-        class: 'editor-surface__content',
-      },
-    },
-  });
-
-  useEffect(() => {
-    if (!editor) {
-      return;
-    }
-
-    const syncFromEditor = () => {
-      const nextMarkdown = editor.getMarkdown();
-      const nextSelection = editor.state.doc.textBetween(
-        editor.state.selection.from,
-        editor.state.selection.to,
-        ' ',
-      );
-
-      setEditorMarkdown(nextMarkdown);
-      setSelectionText(nextSelection);
-
-      if (!sourceDirtyRef.current) {
-        setSourceMarkdown(nextMarkdown);
-      }
-    };
-
-    syncFromEditor();
-    editor.on('update', syncFromEditor);
-    editor.on('selectionUpdate', syncFromEditor);
-
-    return () => {
-      editor.off('update', syncFromEditor);
-      editor.off('selectionUpdate', syncFromEditor);
-    };
-  }, [editor]);
 
   useEffect(() => {
     getStorage()?.setItem(AUTOSAVE_STORAGE_KEY, sourceMarkdown);
   }, [sourceMarkdown]);
 
+  const commitVisualDocument = (nextDocument: VisualDocument, nextStatus = 'Live canvas updated') => {
+    const nextMarkdown = serializeDocument(nextDocument);
+
+    setVisualDocument(nextDocument);
+    setEditorMarkdown(nextMarkdown);
+    setSaveStatus(nextStatus);
+
+    if (!sourceDirtyRef.current) {
+      setSourceMarkdown(nextMarkdown);
+    }
+  };
+
   const loadMarkdownDocument = (markdown: string, nextName: string) => {
+    const nextDocument = parseMarkdownDocument(markdown);
+    const normalizedMarkdown = serializeDocument(nextDocument);
+
     sourceDirtyRef.current = false;
     setIsSourceDirty(false);
-    setSourceMarkdown(markdown);
-    setEditorMarkdown(markdown);
+    setVisualDocument(nextDocument);
+    setEditorMarkdown(normalizedMarkdown);
+    setSourceMarkdown(normalizedMarkdown);
     setDocumentName(nextName);
     setSaveStatus(`Loaded ${nextName}`);
-
-    if (editor) {
-      editor.commands.setContent(markdown, {
-        contentType: 'markdown',
-      });
-    }
   };
 
   const readFile = async (file: File) => {
@@ -395,29 +418,29 @@ const Tiptap = () => {
   };
 
   const applySourceToEditor = () => {
-    if (!editor) {
-      return;
-    }
+    const nextDocument = parseMarkdownDocument(sourceMarkdown);
 
-    editor.commands.setContent(sourceMarkdown, {
-      contentType: 'markdown',
-    });
     sourceDirtyRef.current = false;
     setIsSourceDirty(false);
-    setSaveStatus('Applied source to editor');
+    setVisualDocument(nextDocument);
+    const normalizedMarkdown = serializeDocument(nextDocument);
+    setEditorMarkdown(normalizedMarkdown);
+    setSourceMarkdown(normalizedMarkdown);
+    setSaveStatus('Applied source to live canvas');
   };
 
   const resetSource = () => {
     sourceDirtyRef.current = false;
     setIsSourceDirty(false);
     setSourceMarkdown(editorMarkdown);
+    setSaveStatus('Source reset to live canvas');
   };
 
   const updateSource = (value: string) => {
     sourceDirtyRef.current = value !== editorMarkdown;
     setIsSourceDirty(sourceDirtyRef.current);
     setSourceMarkdown(value);
-    setSaveStatus(sourceDirtyRef.current ? 'Unsaved changes' : 'Local draft active');
+    setSaveStatus(sourceDirtyRef.current ? 'Unsaved source edits' : 'Live canvas active');
   };
 
   const insertSnippet = (snippet: string) => {
@@ -472,17 +495,53 @@ const Tiptap = () => {
     downloadDocument();
   };
 
+  const updateBlock = (index: number, updater: (block: Block) => Block) => {
+    const nextBlocks = visualDocument.blocks.map((block, blockIndex) => {
+      if (blockIndex !== index) {
+        return block;
+      }
+
+      return updater(block);
+    });
+
+    commitVisualDocument({ ...visualDocument, blocks: nextBlocks });
+  };
+
+  const moveBlock = (index: number, direction: -1 | 1) => {
+    const nextIndex = index + direction;
+
+    if (nextIndex < 0 || nextIndex >= visualDocument.blocks.length) {
+      return;
+    }
+
+    const nextBlocks = [...visualDocument.blocks];
+    const [block] = nextBlocks.splice(index, 1);
+
+    nextBlocks.splice(nextIndex, 0, block);
+    commitVisualDocument({ ...visualDocument, blocks: nextBlocks });
+  };
+
+  const deleteBlock = (index: number) => {
+    const nextBlocks = visualDocument.blocks.filter((_, blockIndex) => blockIndex !== index);
+    commitVisualDocument({ ...visualDocument, blocks: nextBlocks }, 'Block removed');
+  };
+
+  const appendBlock = (type: Block['type']) => {
+    const nextBlocks = [...visualDocument.blocks, createBlock(type)];
+    commitVisualDocument({ ...visualDocument, blocks: nextBlocks }, `Added ${type} block`);
+  };
+
   const wordCount = countWords(editorMarkdown);
   const readingMinutes = Math.max(1, Math.ceil(wordCount / 220));
 
   return (
     <main className="editor-shell">
       <section className="hero-panel">
-        <p className="eyebrow">Phase 1: Markdown-first editing core</p>
+        <p className="eyebrow">Phase 2: Live WYSIWYG canvas</p>
         <h1>Rich Zenn Editor</h1>
         <p className="hero-copy">
-          Zenn の Markdown を保ったまま編集できる土台です。左でリッチテキスト、
-          右で生の Markdown を管理し、次の段階で zenn-cli プレビューを接続しやすい構成にしています。
+          メインキャンバス自体が表示結果そのものです。見出し、本文、message、details、card を
+          表示状態のまま編集し、Markdown は内部形式として保持します。
         </p>
         <div className="file-strip" aria-label="document controls">
           <button type="button" onClick={createNewDraft}>
@@ -503,8 +562,8 @@ const Tiptap = () => {
         <div className="status-strip" aria-label="editor status">
           <span>{wordCount} words</span>
           <span>{readingMinutes} min read</span>
-          <span>{selectionText ? `Selection: ${selectionText.length} chars` : 'Selection: none'}</span>
-          <span>{isSourceDirty ? 'Source differs from editor' : 'Source is in sync'}</span>
+          <span>{visualDocument.blocks.length} blocks</span>
+          <span>{isSourceDirty ? 'Source differs from live canvas' : 'Source is in sync'}</span>
         </div>
       </section>
 
@@ -529,56 +588,220 @@ const Tiptap = () => {
           <header className="panel-header">
             <div>
               <p className="panel-label">Visual editor</p>
-              <h2>WYSIWYG canvas</h2>
+              <h2>Live article canvas</h2>
             </div>
-            <div className="toolbar" role="toolbar" aria-label="Formatting tools">
-              <button
-                type="button"
-                onClick={() => editor?.chain().focus().toggleBold().run()}
-                disabled={!editor}
-              >
-                Bold
+            <div className="toolbar" role="toolbar" aria-label="Block tools">
+              <button type="button" onClick={() => appendBlock('paragraph')}>
+                + Paragraph
               </button>
-              <button
-                type="button"
-                onClick={() => editor?.chain().focus().toggleItalic().run()}
-                disabled={!editor}
-              >
-                Italic
+              <button type="button" onClick={() => appendBlock('message')}>
+                + Message
               </button>
-              <button
-                type="button"
-                onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
-                disabled={!editor}
-              >
-                H2
+              <button type="button" onClick={() => appendBlock('details')}>
+                + Details
               </button>
-              <button
-                type="button"
-                onClick={() => editor?.chain().focus().toggleBulletList().run()}
-                disabled={!editor}
-              >
-                List
-              </button>
-              <button
-                type="button"
-                onClick={() => editor?.chain().focus().toggleBlockquote().run()}
-                disabled={!editor}
-              >
-                Quote
-              </button>
-              <button
-                type="button"
-                onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
-                disabled={!editor}
-              >
-                Code
+              <button type="button" onClick={() => appendBlock('card')}>
+                + Card
               </button>
             </div>
           </header>
 
-          <div className="editor-surface">
-            <EditorContent editor={editor} />
+          <div className="editor-surface editor-surface--visual">
+            <div className="visual-canvas">
+              {visualDocument.blocks.map((block, index) => (
+                <article
+                  key={`${block.type}-${index}`}
+                  className={`visual-block visual-block--${block.type}`}
+                >
+                  <div className="visual-block__controls">
+                    <span className="visual-block__type">{block.type}</span>
+                    <div className="visual-block__actions">
+                      <button type="button" onClick={() => moveBlock(index, -1)}>
+                        Up
+                      </button>
+                      <button type="button" onClick={() => moveBlock(index, 1)}>
+                        Down
+                      </button>
+                      <button type="button" onClick={() => deleteBlock(index)}>
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+
+                  {block.type === 'heading' ? (
+                    <div className="visual-heading">
+                      <select
+                        aria-label="Heading level"
+                        value={block.level}
+                        onChange={(event) => {
+                          updateBlock(index, () => ({
+                            ...block,
+                            level: Number(event.target.value) as 1 | 2 | 3,
+                          }));
+                        }}
+                      >
+                        <option value={1}>H1</option>
+                        <option value={2}>H2</option>
+                        <option value={3}>H3</option>
+                      </select>
+                      <input
+                        aria-label="Heading text"
+                        className={`visual-heading__input visual-heading__input--h${block.level}`}
+                        value={block.text}
+                        onChange={(event) => {
+                          updateBlock(index, () => ({
+                            ...block,
+                            text: event.target.value,
+                          }));
+                        }}
+                      />
+                    </div>
+                  ) : null}
+
+                  {block.type === 'paragraph' ? (
+                    <textarea
+                      aria-label="Paragraph text"
+                      className="visual-textarea visual-textarea--plain"
+                      value={block.text}
+                      onChange={(event) => {
+                        updateBlock(index, () => ({
+                          ...block,
+                          text: event.target.value,
+                        }));
+                      }}
+                    />
+                  ) : null}
+
+                  {block.type === 'message' ? (
+                    <div className="zenn-message-block">
+                      <div className="zenn-message-block__label">message</div>
+                      <textarea
+                        aria-label="Message body"
+                        className="visual-textarea visual-textarea--message"
+                        value={block.text}
+                        onChange={(event) => {
+                          updateBlock(index, () => ({
+                            ...block,
+                            text: event.target.value,
+                          }));
+                        }}
+                      />
+                    </div>
+                  ) : null}
+
+                  {block.type === 'details' ? (
+                    <details className="zenn-details-block" open>
+                      <summary>
+                        <input
+                          aria-label="Details title"
+                          className="visual-inline-input"
+                          value={block.title}
+                          onChange={(event) => {
+                            updateBlock(index, () => ({
+                              ...block,
+                              title: event.target.value,
+                            }));
+                          }}
+                        />
+                      </summary>
+                      <textarea
+                        aria-label="Details body"
+                        className="visual-textarea visual-textarea--plain"
+                        value={block.text}
+                        onChange={(event) => {
+                          updateBlock(index, () => ({
+                            ...block,
+                            text: event.target.value,
+                          }));
+                        }}
+                      />
+                    </details>
+                  ) : null}
+
+                  {block.type === 'card' ? (
+                    <a className="zenn-card-block" href={block.url} target="_blank" rel="noreferrer">
+                      <span className="zenn-card-block__eyebrow">link card</span>
+                      <input
+                        aria-label="Card URL"
+                        className="visual-inline-input"
+                        value={block.url}
+                        onChange={(event) => {
+                          updateBlock(index, () => ({
+                            ...block,
+                            url: event.target.value,
+                          }));
+                        }}
+                        onClick={(event) => event.preventDefault()}
+                      />
+                    </a>
+                  ) : null}
+
+                  {block.type === 'quote' ? (
+                    <blockquote className="visual-quote">
+                      <textarea
+                        aria-label="Quote text"
+                        className="visual-textarea visual-textarea--plain"
+                        value={block.text}
+                        onChange={(event) => {
+                          updateBlock(index, () => ({
+                            ...block,
+                            text: event.target.value,
+                          }));
+                        }}
+                      />
+                    </blockquote>
+                  ) : null}
+
+                  {block.type === 'list' ? (
+                    <div className="visual-list">
+                      <ul>
+                        {block.items.map((item, itemIndex) => (
+                          <li key={`${item}-${itemIndex}`}>{item || '...'}</li>
+                        ))}
+                      </ul>
+                      <textarea
+                        aria-label="List items"
+                        className="visual-textarea visual-textarea--plain"
+                        value={block.items.join('\n')}
+                        onChange={(event) => {
+                          updateBlock(index, () => ({
+                            ...block,
+                            items: event.target.value.split('\n'),
+                          }));
+                        }}
+                      />
+                    </div>
+                  ) : null}
+
+                  {block.type === 'code' ? (
+                    <div className="visual-code">
+                      <input
+                        aria-label="Code language"
+                        className="visual-inline-input visual-inline-input--code"
+                        value={block.language}
+                        onChange={(event) => {
+                          updateBlock(index, () => ({
+                            ...block,
+                            language: event.target.value,
+                          }));
+                        }}
+                      />
+                      <textarea
+                        aria-label="Code block"
+                        className="visual-textarea visual-textarea--code"
+                        value={block.code}
+                        onChange={(event) => {
+                          updateBlock(index, () => ({
+                            ...block,
+                            code: event.target.value,
+                          }));
+                        }}
+                      />
+                    </div>
+                  ) : null}
+                </article>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -589,8 +812,8 @@ const Tiptap = () => {
               <h2>Zenn-safe output</h2>
             </div>
             <div className="source-actions">
-              <button type="button" onClick={applySourceToEditor} disabled={!editor || !isSourceDirty}>
-                Apply to editor
+              <button type="button" onClick={applySourceToEditor} disabled={!isSourceDirty}>
+                Apply to live canvas
               </button>
               <button type="button" onClick={resetSource} disabled={!isSourceDirty}>
                 Reset
@@ -599,11 +822,15 @@ const Tiptap = () => {
           </header>
 
           <div className="snippet-bar" aria-label="Zenn snippets">
-            {ZENN_SNIPPETS.map((item) => (
-              <button key={item.label} type="button" onClick={() => insertSnippet(item.snippet)}>
-                + {item.label}
-              </button>
-            ))}
+            <button type="button" onClick={() => insertSnippet(createBlock('message').text ? ':::message\n補足や注意書きを入力します。\n:::' : '')}>
+              + Message
+            </button>
+            <button type="button" onClick={() => insertSnippet(':::details 補足情報\n折りたたみ中の内容です。\n:::')}>
+              + Details
+            </button>
+            <button type="button" onClick={() => insertSnippet('@[card](https://zenn.dev)')}>
+              + Link Card
+            </button>
           </div>
 
           <label className="source-label" htmlFor="markdown-source">
@@ -625,24 +852,6 @@ const Tiptap = () => {
             <p className="panel-label">Preview</p>
             <h2>zenn-cli bridge</h2>
           </div>
-          <div className="preview-toggle" role="tablist" aria-label="Preview mode">
-            <button
-              type="button"
-              className={previewMode === 'local' ? 'is-active' : undefined}
-              onClick={() => setPreviewMode('local')}
-              aria-pressed={previewMode === 'local'}
-            >
-              Local preview
-            </button>
-            <button
-              type="button"
-              className={previewMode === 'iframe' ? 'is-active' : undefined}
-              onClick={() => setPreviewMode('iframe')}
-              aria-pressed={previewMode === 'iframe'}
-            >
-              zenn-cli iframe
-            </button>
-          </div>
         </header>
 
         <div className="preview-toolbar">
@@ -657,37 +866,20 @@ const Tiptap = () => {
             />
           </label>
           <p className="preview-help">
-            `zenn preview` を別プロセスで起動したら、その URL をここに設定します。
-            それまではローカルプレビューで構造確認できます。
+            ローカルの main canvas が WYSIWYG 本体です。`zenn preview` を別プロセスで起動したら、
+            ここに URL を入れて実際の zenn-cli 出力との差分も確認できます。
           </p>
         </div>
 
-        {previewMode === 'iframe' ? (
-          <div className="preview-frame-shell">
-            {previewUrl.trim() ? (
-              <iframe
-                className="preview-frame"
-                title="zenn-cli preview"
-                src={previewUrl}
-              />
-            ) : (
-              <div className="preview-empty">
-                <p>プレビュー URL を入力すると iframe で zenn-cli の画面を表示します。</p>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="preview-surface">
-            <div className="preview-surface__content prose prose-slate">
-              {isSourceDirty ? (
-                <div className="preview-warning">
-                  ローカルプレビューは Markdown ソースを直接描画しています。WYSIWYG 側へ反映するには `Apply to editor` を使います。
-                </div>
-              ) : null}
-              <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
+        <div className="preview-frame-shell">
+          {previewUrl.trim() ? (
+            <iframe className="preview-frame" title="zenn-cli preview" src={previewUrl} />
+          ) : (
+            <div className="preview-empty">
+              <p>プレビュー URL を入力すると iframe で zenn-cli の画面を表示します。</p>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </section>
     </main>
   );

@@ -24,7 +24,9 @@ body {
 }
 
 button,
-textarea {
+textarea,
+input,
+select {
   font: inherit;
 }
 
@@ -222,31 +224,136 @@ button {
   overflow: hidden;
 }
 
-.editor-surface__content {
-  min-height: 540px;
-  padding: 28px;
-  outline: none;
-  line-height: 1.7;
+.editor-surface--visual {
+  padding: 20px;
 }
 
-.editor-surface__content h1,
-.editor-surface__content h2,
-.editor-surface__content h3 {
+.visual-canvas {
+  display: grid;
+  gap: 16px;
+}
+
+.visual-block {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 18px;
+  background: #fff;
+  padding: 16px;
+}
+
+.visual-block__controls,
+.visual-block__actions,
+.visual-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.visual-block__controls {
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.visual-block__type {
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.visual-block__actions button {
+  border: 1px solid #dbe3ee;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #0f172a;
+  padding: 6px 10px;
+}
+
+.visual-heading select,
+.visual-inline-input,
+.visual-heading__input,
+.visual-textarea {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: #0f172a;
+}
+
+.visual-heading select {
+  width: auto;
+  min-width: 72px;
+  border: 1px solid #dbe3ee;
+  border-radius: 12px;
+  background: #f8fafc;
+  padding: 8px 10px;
+}
+
+.visual-heading__input {
+  flex: 1;
+  min-width: 220px;
+  font-weight: 700;
   line-height: 1.2;
 }
 
-.editor-surface__content pre {
+.visual-heading__input--h1 {
+  font-size: 2.1rem;
+}
+
+.visual-heading__input--h2 {
+  font-size: 1.55rem;
+}
+
+.visual-heading__input--h3 {
+  font-size: 1.2rem;
+}
+
+.visual-inline-input {
+  padding: 2px 0;
+}
+
+.visual-inline-input--code {
+  color: #cbd5e1;
+}
+
+.visual-textarea {
+  resize: vertical;
+  min-height: 72px;
+  line-height: 1.7;
+}
+
+.visual-textarea--plain {
+  padding: 0;
+}
+
+.visual-textarea--message {
+  min-height: 64px;
+}
+
+.visual-textarea--code {
+  min-height: 160px;
+  color: #f8fafc;
+  font-family:
+    'IBM Plex Mono',
+    'JetBrains Mono',
+    monospace;
+}
+
+.visual-quote {
+  margin: 0;
+  padding-left: 18px;
+  border-left: 4px solid #38bdf8;
+}
+
+.visual-list ul {
+  margin: 0 0 12px;
+}
+
+.visual-code {
   padding: 14px 16px;
   border-radius: 14px;
   background: #111827;
   color: #f8fafc;
-}
-
-.editor-surface__content blockquote {
-  margin: 0;
-  padding-left: 18px;
-  border-left: 4px solid #38bdf8;
-  color: #334155;
 }
 
 .source-label {
@@ -397,7 +504,10 @@ button {
 }
 
 .source-editor:focus,
-.editor-surface__content:focus,
+.visual-inline-input:focus,
+.visual-heading__input:focus,
+.visual-textarea:focus,
+.visual-heading select:focus,
 .preview-url-field input:focus {
   outline: 2px solid rgba(56, 189, 248, 0.45);
   outline-offset: -2px;
@@ -420,10 +530,7 @@ button {
   }
 
   .editor-surface,
-  .editor-surface__content,
   .source-editor,
-  .preview-surface,
-  .preview-surface__content,
   .preview-frame,
   .preview-frame-shell,
   .preview-empty {
