@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @plugin "@tailwindcss/typography";
+@import 'zenn-content-css/lib/index.css';
 
 :root {
   color: #e8ecf3;
@@ -368,23 +369,6 @@ button {
   margin-bottom: 16px;
 }
 
-.preview-url-field {
-  display: grid;
-  gap: 8px;
-  color: #d7e8ff;
-  font-size: 0.92rem;
-}
-
-.preview-url-field input {
-  width: min(100%, 360px);
-  min-width: 260px;
-  padding: 10px 14px;
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  border-radius: 14px;
-  background: rgba(5, 10, 20, 0.8);
-  color: #eef4ff;
-}
-
 .preview-help {
   margin: 0;
   color: #b8c6de;
@@ -392,8 +376,7 @@ button {
   line-height: 1.6;
 }
 
-.preview-surface,
-.preview-frame-shell {
+.preview-surface {
   min-height: 420px;
   border-radius: 20px;
   border: 1px solid rgba(148, 163, 184, 0.12);
@@ -407,15 +390,7 @@ button {
 .preview-surface__content {
   min-height: 420px;
   padding: 28px;
-}
-
-.preview-warning {
-  margin-bottom: 18px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: #fff7ed;
-  color: #9a3412;
-  font-size: 0.92rem;
+  overflow-wrap: anywhere;
 }
 
 .zenn-message-block {
@@ -471,22 +446,6 @@ button {
   margin: 0 0 18px;
 }
 
-.preview-frame {
-  width: 100%;
-  min-height: 420px;
-  border: 0;
-  background: #fff;
-}
-
-.preview-empty {
-  display: grid;
-  place-items: center;
-  min-height: 420px;
-  padding: 24px;
-  color: #334155;
-  text-align: center;
-}
-
 .source-editor {
   width: 100%;
   min-height: 540px;
@@ -507,8 +466,7 @@ button {
 .visual-inline-input:focus,
 .visual-heading__input:focus,
 .visual-textarea:focus,
-.visual-heading select:focus,
-.preview-url-field input:focus {
+.visual-heading select:focus {
   outline: 2px solid rgba(56, 189, 248, 0.45);
   outline-offset: -2px;
 }
@@ -531,13 +489,7 @@ button {
 
   .editor-surface,
   .source-editor,
-  .preview-frame,
-  .preview-frame-shell,
-  .preview-empty {
+  .preview-surface {
     min-height: 420px;
-  }
-
-  .preview-url-field input {
-    min-width: 100%;
   }
 }

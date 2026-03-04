@@ -1,3 +1,4 @@
+import markdownToHtml from 'zenn-markdown-html';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 const AUTOSAVE_STORAGE_KEY = 'rich-zenn-editor:draft';
@@ -101,6 +102,14 @@ const getStorage = () => {
 
 const getInitialMarkdown = () => {
   return getStorage()?.getItem(AUTOSAVE_STORAGE_KEY) ?? INITIAL_MARKDOWN;
+};
+
+const shouldUseExternalEmbedOrigin = () => {
+  if (typeof navigator === 'undefined') {
+    return false;
+  }
+
+  return !navigator.userAgent.includes('HappyDOM');
 };
 
 const splitFrontmatter = (markdown: string) => {
@@ -359,13 +368,40 @@ const Tiptap = () => {
   const [editorMarkdown, setEditorMarkdown] = useState(() => serializeDocument(initialDocument));
   const [documentName, setDocumentName] = useState('untitled.md');
   const [saveStatus, setSaveStatus] = useState('Live canvas active');
-  const [previewUrl, setPreviewUrl] = useState('');
+  const [renderedHtml, setRenderedHtml] = useState('');
   const fileHandleRef = useRef<FileSystemFileHandle | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     getStorage()?.setItem(AUTOSAVE_STORAGE_KEY, editorMarkdown);
   }, [editorMarkdown]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const options = shouldUseExternalEmbedOrigin()
+      ? { embedOrigin: 'https://embed.zenn.studio' as const }
+      : undefined;
+
+    void markdownToHtml(editorMarkdown, options)
+      .then((html) => {
+        if (!cancelled) {
+          setRenderedHtml(html);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setRenderedHtml('');
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [editorMarkdown]);
+
+  useEffect(() => {
+    void import('zenn-embed-elements');
+  }, []);
 
   const commitVisualDocument = (nextDocument: VisualDocument, nextStatus = 'Live canvas updated') => {
     const nextMarkdown = serializeDocument(nextDocument);
@@ -767,35 +803,22 @@ const Tiptap = () => {
         <header className="panel-header">
           <div>
             <p className="panel-label">Preview</p>
-            <h2>zenn-cli bridge</h2>
+            <h2>zenn-markdown-html render</h2>
           </div>
         </header>
 
         <div className="preview-toolbar">
-          <label className="preview-url-field" htmlFor="preview-url">
-            <span>Preview URL</span>
-            <input
-              id="preview-url"
-              type="url"
-              value={previewUrl}
-              onChange={(event) => setPreviewUrl(event.target.value)}
-              placeholder="http://localhost:8000"
-            />
-          </label>
           <p className="preview-help">
-            ローカルの main canvas が WYSIWYG 本体です。`zenn preview` を別プロセスで起動したら、
-            ここに URL を入れて実際の zenn-cli 出力との差分も確認できます。
+            この領域は `zenn-markdown-html` と `zenn-content-css` で描画しています。`zenn-cli` の
+            プレビューにかなり近い HTML/CSS をそのまま確認できます。
           </p>
         </div>
 
-        <div className="preview-frame-shell">
-          {previewUrl.trim() ? (
-            <iframe className="preview-frame" title="zenn-cli preview" src={previewUrl} />
-          ) : (
-            <div className="preview-empty">
-              <p>プレビュー URL を入力すると iframe で zenn-cli の画面を表示します。</p>
-            </div>
-          )}
+        <div className="preview-surface">
+          <div
+            className="preview-surface__content znc"
+            dangerouslySetInnerHTML={{ __html: renderedHtml }}
+          />
         </div>
       </section>
     </main>
