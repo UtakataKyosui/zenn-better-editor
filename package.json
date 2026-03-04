@@ -13,6 +13,7 @@
     "test:watch": "rstest --watch"
   },
   "dependencies": {
+    "@tiptap/markdown": "^3.20.0",
     "@tiptap/pm": "^3.20.0",
     "@tiptap/react": "^3.20.0",
     "@tiptap/starter-kit": "^3.20.0",
@@ -25,6 +26,7 @@
     "@rsbuild/plugin-react": "^1.4.2",
     "@rstest/core": "^0.7.8",
     "@tailwindcss/postcss": "^4.1.18",
+    "@tailwindcss/typography": "^0.5.19",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.1",
