@@ -1,32 +1,60 @@
 import { Markdown } from '@tiptap/markdown';
 import StarterKit from '@tiptap/starter-kit';
 import { EditorContent, useEditor } from '@tiptap/react';
-import { useEffect, useRef, useState } from 'react';
+import { useDeferredValue, useEffect, useRef, useState } from 'react';
+
+const AUTOSAVE_STORAGE_KEY = 'rich-zenn-editor:draft';
 
 const INITIAL_MARKDOWN = `---
-title: "Zenn article draft"
-emoji: "📝"
+title: "Rich Zenn Editor preview demo"
+emoji: "📚"
 type: "tech"
 topics:
   - editor
   - zenn
+  - preview
 published: false
 ---
 
-# Zenn 向けの下書き
+# ローカルプレビュー確認用のサンプル
 
-WYSIWYG で編集しながら、Markdown を壊さずに持てる構成です。
+起動直後に Zenn 記法の見え方を確認できるよう、主要なブロックを最初から配置しています。
 
-## 書きたいこと
+:::message
+このブロックは Zenn の message 記法です。注意書きや補足に使います。
+:::
 
-- 見出し
-- 箇条書き
-- コードブロック
+## 箇条書き
+
+- 見出しの表示
+- リストの表示
+- コードブロックの表示
+
+:::details ローカルプレビューで開いて確認
+details 記法の見え方をここで確認できます。あとで折りたたみ挙動も強化できます。
+:::
+
+@[card](https://zenn.dev/zenn/articles/markdown-guide)
+
+> 引用ブロックも同時に確認できます。
 
 \`\`\`ts
-export const hello = 'zenn';
+export const previewTarget = {
+  mode: 'local',
+  supports: ['message', 'details', 'card'],
+};
 \`\`\`
 `;
+
+const MARKDOWN_FILE_TYPES = [
+  {
+    description: 'Markdown files',
+    accept: {
+      'text/markdown': ['.md'],
+      'text/plain': ['.md'],
+    },
+  },
+];
 
 const ZENN_SNIPPETS = [
   {
@@ -65,16 +93,226 @@ const countWords = (value: string) => {
   return normalized.split(/\s+/).length;
 };
 
+const escapeHtml = (value: string) => {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+};
+
+const renderInlineMarkdown = (value: string) => {
+  return escapeHtml(value)
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+};
+
+const renderParagraph = (value: string) => {
+  return `<p>${renderInlineMarkdown(value)}</p>`;
+};
+
+const renderZennPreview = (markdown: string) => {
+  const withoutFrontmatter = markdown.replace(/^---[\s\S]*?---\n?/m, '').trim();
+  const lines = withoutFrontmatter.split('\n');
+  const chunks: string[] = [];
+  let index = 0;
+
+  while (index < lines.length) {
+    const rawLine = lines[index] ?? '';
+    const line = rawLine.trim();
+
+    if (!line) {
+      index += 1;
+      continue;
+    }
+
+    if (line.startsWith('```')) {
+      const language = line.slice(3).trim();
+      const codeLines: string[] = [];
+      index += 1;
+
+      while (index < lines.length && !lines[index]?.trim().startsWith('```')) {
+        codeLines.push(lines[index] ?? '');
+        index += 1;
+      }
+
+      if (index < lines.length) {
+        index += 1;
+      }
+
+      const code = escapeHtml(codeLines.join('\n'));
+      chunks.push(
+        `<pre class="zenn-code-block"><code data-language="${escapeHtml(language)}">${code}</code></pre>`,
+      );
+      continue;
+    }
+
+    if (line.startsWith(':::message')) {
+      const body: string[] = [];
+      index += 1;
+
+      while (index < lines.length && lines[index]?.trim() !== ':::') {
+        body.push(lines[index] ?? '');
+        index += 1;
+      }
+
+      if (index < lines.length) {
+        index += 1;
+      }
+
+      chunks.push(`
+        <aside class="zenn-message-block">
+          <div class="zenn-message-block__label">message</div>
+          <div>${renderParagraph(body.join(' ').trim())}</div>
+        </aside>
+      `);
+      continue;
+    }
+
+    if (line.startsWith(':::details')) {
+      const title = line.replace(':::details', '').trim() || 'Details';
+      const body: string[] = [];
+      index += 1;
+
+      while (index < lines.length && lines[index]?.trim() !== ':::') {
+        body.push(lines[index] ?? '');
+        index += 1;
+      }
+
+      if (index < lines.length) {
+        index += 1;
+      }
+
+      chunks.push(`
+        <details class="zenn-details-block" open>
+          <summary>${renderInlineMarkdown(title)}</summary>
+          ${renderParagraph(body.join(' ').trim())}
+        </details>
+      `);
+      continue;
+    }
+
+    const cardMatch = line.match(/^@\[card]\((https?:\/\/[^\s)]+)\)$/);
+    if (cardMatch) {
+      const url = cardMatch[1];
+      chunks.push(`
+        <a class="zenn-card-block" href="${escapeHtml(url)}" target="_blank" rel="noreferrer">
+          <span class="zenn-card-block__eyebrow">link card</span>
+          <strong>${escapeHtml(url.replace(/^https?:\/\//, ''))}</strong>
+          <span>${escapeHtml(url)}</span>
+        </a>
+      `);
+      index += 1;
+      continue;
+    }
+
+    if (line.startsWith('# ')) {
+      chunks.push(`<h1>${renderInlineMarkdown(line.slice(2))}</h1>`);
+      index += 1;
+      continue;
+    }
+
+    if (line.startsWith('## ')) {
+      chunks.push(`<h2>${renderInlineMarkdown(line.slice(3))}</h2>`);
+      index += 1;
+      continue;
+    }
+
+    if (line.startsWith('### ')) {
+      chunks.push(`<h3>${renderInlineMarkdown(line.slice(4))}</h3>`);
+      index += 1;
+      continue;
+    }
+
+    if (line.startsWith('> ')) {
+      chunks.push(`<blockquote>${renderParagraph(line.slice(2))}</blockquote>`);
+      index += 1;
+      continue;
+    }
+
+    if (line.startsWith('- ')) {
+      const items: string[] = [];
+
+      while (index < lines.length && lines[index]?.trim().startsWith('- ')) {
+        items.push(`<li>${renderInlineMarkdown(lines[index]!.trim().slice(2))}</li>`);
+        index += 1;
+      }
+
+      chunks.push(`<ul>${items.join('')}</ul>`);
+      continue;
+    }
+
+    const paragraphLines = [line];
+    index += 1;
+
+    while (index < lines.length) {
+      const nextLine = lines[index]?.trim() ?? '';
+
+      if (
+        !nextLine ||
+        nextLine.startsWith('#') ||
+        nextLine.startsWith('- ') ||
+        nextLine.startsWith('> ') ||
+        nextLine.startsWith('```') ||
+        nextLine.startsWith(':::') ||
+        nextLine.startsWith('@[card]')
+      ) {
+        break;
+      }
+
+      paragraphLines.push(nextLine);
+      index += 1;
+    }
+
+    chunks.push(renderParagraph(paragraphLines.join(' ')));
+  }
+
+  return chunks.join('');
+};
+
+const getStorage = () => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const { localStorage } = window;
+
+  if (
+    typeof localStorage?.getItem !== 'function' ||
+    typeof localStorage?.setItem !== 'function'
+  ) {
+    return null;
+  }
+
+  return localStorage;
+};
+
+const getInitialMarkdown = () => {
+  return getStorage()?.getItem(AUTOSAVE_STORAGE_KEY) ?? INITIAL_MARKDOWN;
+};
+
 const Tiptap = () => {
-  const [editorMarkdown, setEditorMarkdown] = useState(INITIAL_MARKDOWN);
-  const [sourceMarkdown, setSourceMarkdown] = useState(INITIAL_MARKDOWN);
+  const initialMarkdown = getInitialMarkdown();
+  const [editorMarkdown, setEditorMarkdown] = useState(initialMarkdown);
+  const [sourceMarkdown, setSourceMarkdown] = useState(initialMarkdown);
   const [isSourceDirty, setIsSourceDirty] = useState(false);
   const [selectionText, setSelectionText] = useState('');
+  const [documentName, setDocumentName] = useState('untitled.md');
+  const [saveStatus, setSaveStatus] = useState('Local draft active');
+  const [previewMode, setPreviewMode] = useState<'local' | 'iframe'>('local');
+  const [previewUrl, setPreviewUrl] = useState('http://localhost:8000');
   const sourceDirtyRef = useRef(false);
+  const fileHandleRef = useRef<FileSystemFileHandle | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const deferredSourceMarkdown = useDeferredValue(sourceMarkdown);
+  const previewHtml = renderZennPreview(deferredSourceMarkdown);
 
   const editor = useEditor({
     extensions: [StarterKit, Markdown],
-    content: INITIAL_MARKDOWN,
+    content: initialMarkdown,
     contentType: 'markdown',
     immediatelyRender: false,
     editorProps: {
@@ -115,6 +353,47 @@ const Tiptap = () => {
     };
   }, [editor]);
 
+  useEffect(() => {
+    getStorage()?.setItem(AUTOSAVE_STORAGE_KEY, sourceMarkdown);
+  }, [sourceMarkdown]);
+
+  const loadMarkdownDocument = (markdown: string, nextName: string) => {
+    sourceDirtyRef.current = false;
+    setIsSourceDirty(false);
+    setSourceMarkdown(markdown);
+    setEditorMarkdown(markdown);
+    setDocumentName(nextName);
+    setSaveStatus(`Loaded ${nextName}`);
+
+    if (editor) {
+      editor.commands.setContent(markdown, {
+        contentType: 'markdown',
+      });
+    }
+  };
+
+  const readFile = async (file: File) => {
+    const markdown = await file.text();
+    loadMarkdownDocument(markdown, file.name);
+  };
+
+  const openDocument = async () => {
+    if (typeof window.showOpenFilePicker === 'function') {
+      const [fileHandle] = await window.showOpenFilePicker({
+        excludeAcceptAllOption: false,
+        multiple: false,
+        types: MARKDOWN_FILE_TYPES,
+      });
+
+      fileHandleRef.current = fileHandle;
+      const file = await fileHandle.getFile();
+      await readFile(file);
+      return;
+    }
+
+    fileInputRef.current?.click();
+  };
+
   const applySourceToEditor = () => {
     if (!editor) {
       return;
@@ -125,6 +404,7 @@ const Tiptap = () => {
     });
     sourceDirtyRef.current = false;
     setIsSourceDirty(false);
+    setSaveStatus('Applied source to editor');
   };
 
   const resetSource = () => {
@@ -137,11 +417,59 @@ const Tiptap = () => {
     sourceDirtyRef.current = value !== editorMarkdown;
     setIsSourceDirty(sourceDirtyRef.current);
     setSourceMarkdown(value);
+    setSaveStatus(sourceDirtyRef.current ? 'Unsaved changes' : 'Local draft active');
   };
 
   const insertSnippet = (snippet: string) => {
     const next = `${sourceMarkdown.trimEnd()}\n\n${snippet}\n`;
     updateSource(next);
+  };
+
+  const createNewDraft = () => {
+    fileHandleRef.current = null;
+    loadMarkdownDocument(INITIAL_MARKDOWN, 'untitled.md');
+  };
+
+  const downloadDocument = () => {
+    const blob = new Blob([sourceMarkdown], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+
+    anchor.href = url;
+    anchor.download = documentName;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    setSaveStatus(`Downloaded ${documentName}`);
+  };
+
+  const saveToHandle = async (handle: FileSystemFileHandle) => {
+    const writable = await handle.createWritable();
+    await writable.write(sourceMarkdown);
+    await writable.close();
+    fileHandleRef.current = handle;
+    setDocumentName(handle.name);
+    sourceDirtyRef.current = false;
+    setIsSourceDirty(false);
+    setSaveStatus(`Saved ${handle.name}`);
+  };
+
+  const saveDocument = async () => {
+    if (fileHandleRef.current) {
+      await saveToHandle(fileHandleRef.current);
+      return;
+    }
+
+    if (typeof window.showSaveFilePicker === 'function') {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: documentName,
+        types: MARKDOWN_FILE_TYPES,
+      });
+
+      await saveToHandle(handle);
+      return;
+    }
+
+    downloadDocument();
   };
 
   const wordCount = countWords(editorMarkdown);
@@ -156,6 +484,22 @@ const Tiptap = () => {
           Zenn の Markdown を保ったまま編集できる土台です。左でリッチテキスト、
           右で生の Markdown を管理し、次の段階で zenn-cli プレビューを接続しやすい構成にしています。
         </p>
+        <div className="file-strip" aria-label="document controls">
+          <button type="button" onClick={createNewDraft}>
+            New draft
+          </button>
+          <button type="button" onClick={() => void openDocument()}>
+            Open .md
+          </button>
+          <button type="button" onClick={() => void saveDocument()}>
+            Save
+          </button>
+          <button type="button" onClick={downloadDocument}>
+            Download copy
+          </button>
+          <span className="document-meta">{documentName}</span>
+          <span className="document-meta">{saveStatus}</span>
+        </div>
         <div className="status-strip" aria-label="editor status">
           <span>{wordCount} words</span>
           <span>{readingMinutes} min read</span>
@@ -163,6 +507,22 @@ const Tiptap = () => {
           <span>{isSourceDirty ? 'Source differs from editor' : 'Source is in sync'}</span>
         </div>
       </section>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".md,text/markdown,text/plain"
+        hidden
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+
+          if (file) {
+            void readFile(file);
+          }
+
+          event.target.value = '';
+        }}
+      />
 
       <section className="workspace-grid">
         <section className="panel">
@@ -257,6 +617,77 @@ const Tiptap = () => {
             spellCheck={false}
           />
         </section>
+      </section>
+
+      <section className="panel preview-panel">
+        <header className="panel-header">
+          <div>
+            <p className="panel-label">Preview</p>
+            <h2>zenn-cli bridge</h2>
+          </div>
+          <div className="preview-toggle" role="tablist" aria-label="Preview mode">
+            <button
+              type="button"
+              className={previewMode === 'local' ? 'is-active' : undefined}
+              onClick={() => setPreviewMode('local')}
+              aria-pressed={previewMode === 'local'}
+            >
+              Local preview
+            </button>
+            <button
+              type="button"
+              className={previewMode === 'iframe' ? 'is-active' : undefined}
+              onClick={() => setPreviewMode('iframe')}
+              aria-pressed={previewMode === 'iframe'}
+            >
+              zenn-cli iframe
+            </button>
+          </div>
+        </header>
+
+        <div className="preview-toolbar">
+          <label className="preview-url-field" htmlFor="preview-url">
+            <span>Preview URL</span>
+            <input
+              id="preview-url"
+              type="url"
+              value={previewUrl}
+              onChange={(event) => setPreviewUrl(event.target.value)}
+              placeholder="http://localhost:8000"
+            />
+          </label>
+          <p className="preview-help">
+            `zenn preview` を別プロセスで起動したら、その URL をここに設定します。
+            それまではローカルプレビューで構造確認できます。
+          </p>
+        </div>
+
+        {previewMode === 'iframe' ? (
+          <div className="preview-frame-shell">
+            {previewUrl.trim() ? (
+              <iframe
+                className="preview-frame"
+                title="zenn-cli preview"
+                src={previewUrl}
+              />
+            ) : (
+              <div className="preview-empty">
+                <p>プレビュー URL を入力すると iframe で zenn-cli の画面を表示します。</p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="preview-surface">
+            <div className="preview-surface__content prose prose-slate">
+              {isSourceDirty ? (
+                <div className="preview-warning">
+                  ローカルプレビューは Markdown ソースを直接描画しています。WYSIWYG 側へ反映するには `Apply to editor` を使います。
+                </div>
+              ) : null}
+              <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
+            </div>
+          </div>
+        )}
       </section>
     </main>
   );
