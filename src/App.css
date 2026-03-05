@@ -571,6 +571,18 @@ button {
   margin-top: 2.4rem;
 }
 
+.source-editor--wysiwyg .tiptap-details-summary-input {
+  display: inline-block;
+  width: calc(100% - 1.8rem);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  outline: none;
+  vertical-align: middle;
+}
+
 .source-editor--wysiwyg .tiptap-footnote-label {
   color: #475569;
   font-weight: 600;

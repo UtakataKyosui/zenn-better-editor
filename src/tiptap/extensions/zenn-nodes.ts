@@ -281,12 +281,38 @@ export const ZennDetails = Node.create({
       const summary = document.createElement('summary');
       summary.setAttribute('contenteditable', 'false');
       summary.setAttribute('tabindex', '0');
+      const summaryInput = document.createElement('input');
+      summaryInput.className = 'tiptap-details-summary-input';
+      summaryInput.type = 'text';
+      summaryInput.setAttribute('aria-label', 'Details title');
+      summary.append(summaryInput);
 
       const contentDOM = document.createElement('div');
       contentDOM.className = 'details-content';
       const syncFromNode = (nextNode: typeof node) => {
-        summary.textContent = String(nextNode.attrs.summary || 'Details');
+        const nextSummary = String(nextNode.attrs.summary || 'Details');
+        if (summaryInput.value !== nextSummary) {
+          summaryInput.value = nextSummary;
+        }
         dom.open = Boolean(nextNode.attrs.open);
+      };
+
+      const updateSummaryAttr = (nextSummary: string) => {
+        const pos = typeof getPos === 'function' ? getPos() : getPos;
+        if (typeof pos !== 'number') return;
+
+        const currentNode = editor.state.doc.nodeAt(pos);
+        if (!currentNode || currentNode.type.name !== this.name) return;
+        const normalizedSummary = nextSummary.trim() || 'Details';
+        if (String(currentNode.attrs.summary || 'Details') === normalizedSummary) {
+          return;
+        }
+
+        const tr = editor.state.tr.setNodeMarkup(pos, undefined, {
+          ...currentNode.attrs,
+          summary: normalizedSummary,
+        });
+        editor.view.dispatch(tr);
       };
 
       const updateOpenAttr = (nextOpen: boolean) => {
@@ -308,6 +334,13 @@ export const ZennDetails = Node.create({
       dom.append(summary, contentDOM);
 
       const handleSummaryToggle = (event: MouseEvent | KeyboardEvent) => {
+        const target = event.target as HTMLElement | null;
+        if (target?.closest('.tiptap-details-summary-input')) {
+          event.preventDefault();
+          event.stopPropagation();
+          summaryInput.focus();
+          return;
+        }
         event.preventDefault();
         event.stopPropagation();
         updateOpenAttr(!dom.open);
@@ -318,8 +351,29 @@ export const ZennDetails = Node.create({
         handleSummaryToggle(event);
       };
 
+      const handleSummaryInputBlur = () => {
+        updateSummaryAttr(summaryInput.value);
+      };
+
+      const handleSummaryInputKeyDown = (event: KeyboardEvent) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          updateSummaryAttr(summaryInput.value);
+          summaryInput.blur();
+          return;
+        }
+        event.stopPropagation();
+      };
+
+      const handleSummaryInputClick = (event: MouseEvent) => {
+        event.stopPropagation();
+      };
+
       summary.addEventListener('click', handleSummaryToggle);
       summary.addEventListener('keydown', handleSummaryKeyDown);
+      summaryInput.addEventListener('blur', handleSummaryInputBlur);
+      summaryInput.addEventListener('keydown', handleSummaryInputKeyDown);
+      summaryInput.addEventListener('click', handleSummaryInputClick);
 
       return {
         dom,
@@ -336,6 +390,9 @@ export const ZennDetails = Node.create({
         destroy: () => {
           summary.removeEventListener('click', handleSummaryToggle);
           summary.removeEventListener('keydown', handleSummaryKeyDown);
+          summaryInput.removeEventListener('blur', handleSummaryInputBlur);
+          summaryInput.removeEventListener('keydown', handleSummaryInputKeyDown);
+          summaryInput.removeEventListener('click', handleSummaryInputClick);
         },
       };
     };

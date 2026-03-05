@@ -570,6 +570,44 @@ test('toggles zenn details by clicking summary in wysiwyg', async () => {
   });
 });
 
+test('allows editing zenn details summary title in wysiwyg', async () => {
+  const markdown = [':::details 元タイトル', '表示したい内容', ':::', ''].join('\n');
+  const initialHtml = await markdownToHtml(markdown);
+  const changes: string[] = [];
+
+  const { container } = render(
+    <TiptapEditor
+      markdown={markdown}
+      initialHtml={initialHtml}
+      onChange={(next) => changes.push(next)}
+      className="source-editor source-editor--fused source-editor--wysiwyg znc"
+      ariaLabel="WYSIWYG body"
+    />,
+  );
+
+  const summaryInput = (await waitFor(
+    () => {
+      const element = container.querySelector(
+        '.tiptap-details-summary-input',
+      ) as HTMLInputElement | null;
+      expect(element).not.toBeNull();
+      return element;
+    },
+    { timeout: 5000 },
+  )) as HTMLInputElement;
+
+  fireEvent.input(summaryInput, { target: { value: '再編集タイトル' } });
+  fireEvent.blur(summaryInput);
+
+  await waitFor(
+    () => {
+      expect(changes.length).toBeGreaterThan(0);
+      expect(changes.at(-1)).toContain(':::details 再編集タイトル');
+    },
+    { timeout: 5000 },
+  );
+});
+
 test('allows editing footnote content from the rendered footnotes section', async () => {
   const markdown = ['脚注の参照[^note]', '', '[^note]: 初期脚注', ''].join('\n');
   const initialHtml = await markdownToHtml(markdown);
