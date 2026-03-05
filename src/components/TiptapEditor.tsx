@@ -86,13 +86,27 @@ export const TiptapEditor = ({
   useEffect(() => {
     if (!editor || isUpdatingRef.current) return;
 
+    if (!hasInitializedRef.current) {
+      // Avoid parsing custom Zenn directives as plain text during first mount.
+      if (initialHtml) {
+        editor.commands.setContent(initialHtml);
+        hasInitializedRef.current = true;
+      }
+      return;
+    }
+
     // biome-ignore lint/suspicious/noExplicitAny: Tiptap types might be incomplete
     const currentMarkdown =
       (editor.storage.markdown as any)?.getMarkdown?.() || '';
     if (currentMarkdown !== markdown) {
+      if (initialHtml) {
+        editor.commands.setContent(initialHtml);
+        return;
+      }
+
       editor.commands.setContent(markdown, { contentType: 'markdown' });
     }
-  }, [markdown, editor]);
+  }, [markdown, initialHtml, editor]);
 
   return (
     <div
