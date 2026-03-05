@@ -22,6 +22,10 @@ import {
   ZENN_CONTAINER_CONVERSION_META_KEY,
   convertTypedZennContainers,
 } from '../utils/zenn-container-transform';
+import {
+  ZENN_IMAGE_CONVERSION_META_KEY,
+  convertTypedZennImages,
+} from '../utils/zenn-image-transform';
 
 type TiptapEditorProps = {
   markdown: string;
@@ -109,6 +113,12 @@ export const TiptapEditor = ({
     onUpdate: ({ editor, transaction }) => {
       if (!transaction.getMeta(ZENN_CONTAINER_CONVERSION_META_KEY)) {
         const converted = convertTypedZennContainers(editor);
+        if (converted) {
+          return;
+        }
+      }
+      if (!transaction.getMeta(ZENN_IMAGE_CONVERSION_META_KEY)) {
+        const converted = convertTypedZennImages(editor);
         if (converted) {
           return;
         }
