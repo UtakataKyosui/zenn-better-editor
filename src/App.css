@@ -70,8 +70,8 @@ button {
   text-transform: uppercase;
 }
 
-.hero-panel h1,
-.panel h2 {
+.hero-panel > h1,
+.panel .panel-header h2 {
   margin: 8px 0 0;
   font-family:
     'Space Grotesk',
@@ -85,7 +85,7 @@ button {
   font-size: clamp(2.2rem, 5vw, 4.2rem);
 }
 
-.panel h2 {
+.panel .panel-header h2 {
   font-size: 1.1rem;
 }
 

@@ -26,6 +26,21 @@ const shouldUseExternalEmbedOrigin = () => {
   return !navigator.userAgent.includes('HappyDOM');
 };
 
+const EMBED_ONLY_LINE_PATTERN = /^(@\[[\w-]+\]\(.+\)|https?:\/\/\S+)$/gim;
+
+const getInitialMarkdownByEnvironment = () => {
+  if (shouldUseExternalEmbedOrigin()) {
+    return INITIAL_MARKDOWN;
+  }
+
+  // HappyDOM tests cannot fully handle external iframe/network embeds.
+  // Keep syntax visible while preventing embed resolution in test runtime.
+  return INITIAL_MARKDOWN.replace(
+    EMBED_ONLY_LINE_PATTERN,
+    (line) => `\`${line}\``,
+  );
+};
+
 const createDefaultFrontmatter = (documentName: string) => {
   const baseTitle = documentName.replace(/\.md$/i, '').trim() || 'untitled';
 
@@ -39,7 +54,11 @@ const createDefaultFrontmatter = (documentName: string) => {
 };
 
 const Tiptap = () => {
-  const initialParts = useMemo(() => splitMarkdownParts(INITIAL_MARKDOWN), []);
+  const initialMarkdown = useMemo(() => getInitialMarkdownByEnvironment(), []);
+  const initialParts = useMemo(
+    () => splitMarkdownParts(initialMarkdown),
+    [initialMarkdown],
+  );
   const [frontmatter, setFrontmatter] = useState(initialParts.frontmatter);
   const [body, setBody] = useState(initialParts.body);
   const [renderedHtml, setRenderedHtml] = useState('');
@@ -143,7 +162,9 @@ const Tiptap = () => {
   }, [body]);
 
   useEffect(() => {
-    void import('zenn-embed-elements');
+    if (shouldUseExternalEmbedOrigin()) {
+      void import('zenn-embed-elements');
+    }
   }, []);
 
   const loadFromHandle = async (
@@ -205,7 +226,7 @@ const Tiptap = () => {
   const createNewDraft = () => {
     fileHandleRef.current = null;
     void clearRecentFileHandle();
-    loadMarkdownDocument(INITIAL_MARKDOWN, 'untitled.md');
+    loadMarkdownDocument(initialMarkdown, 'untitled.md');
   };
 
   const downloadDocument = () => {
