@@ -319,3 +319,42 @@ test('renders zenn embed blocks inside wysiwyg editor', async () => {
     { timeout: 5000 },
   );
 });
+
+test('toggles zenn details by clicking summary in wysiwyg', async () => {
+  const markdown = [':::details タイトル', '表示したい内容', ':::', ''].join('\n');
+  const initialHtml = await markdownToHtml(markdown);
+
+  const { container } = render(
+    <TiptapEditor
+      markdown={markdown}
+      initialHtml={initialHtml}
+      onChange={() => {}}
+      className="source-editor source-editor--fused source-editor--wysiwyg znc"
+      ariaLabel="WYSIWYG body"
+    />,
+  );
+
+  await waitFor(
+    () => {
+      expect(container.querySelector('details.zenn-details summary')).not.toBeNull();
+    },
+    { timeout: 5000 },
+  );
+
+  const details = container.querySelector('details.zenn-details');
+  const summary = container.querySelector(
+    'details.zenn-details summary',
+  ) as HTMLElement | null;
+
+  expect(details?.hasAttribute('open')).toBe(false);
+  fireEvent.click(summary as HTMLElement);
+
+  await waitFor(() => {
+    expect(details?.hasAttribute('open')).toBe(true);
+  });
+
+  fireEvent.click(summary as HTMLElement);
+  await waitFor(() => {
+    expect(details?.hasAttribute('open')).toBe(false);
+  });
+});
