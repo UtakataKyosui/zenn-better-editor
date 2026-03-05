@@ -53,6 +53,7 @@ const Tiptap = () => {
   const [renderedHtml, setRenderedHtml] = useState('');
   const [documentName, setDocumentName] = useState('untitled.md');
   const [saveStatus, setSaveStatus] = useState('Live markdown editing');
+  const [isSeamless, setIsSeamless] = useState(true);
   const fileHandleRef = useRef<FileSystemFileHandle | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -202,6 +203,8 @@ const Tiptap = () => {
         frontmatter={frontmatter}
         body={body}
         renderedHtml={renderedHtml}
+        isSeamless={isSeamless}
+        onToggleSeamless={() => setIsSeamless((prev) => !prev)}
         onChangeFrontmatter={(val) => {
           setFrontmatter(val);
           setSaveStatus('Live markdown editing');

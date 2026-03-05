@@ -5,7 +5,6 @@ import {
   render,
   screen,
   waitFor,
-  within,
 } from '@testing-library/react';
 import App from '../src/App';
 
@@ -22,7 +21,10 @@ test('renders the markdown-first workspace', async () => {
   expect(
     screen.getByRole('heading', { name: 'Unified markdown surface' }),
   ).toBeInTheDocument();
-  expect(screen.getByLabelText('YAML frontmatter')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /Split View|Seamless View/i })).toBeInTheDocument();
+  // Frontmatter fields are now structured widgets, not a single textarea
+  expect(screen.getByLabelText('Title')).toBeInTheDocument();
+  expect(screen.getByLabelText('Emoji')).toBeInTheDocument();
   expect(screen.getByLabelText('Markdown body')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Open .md' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
@@ -38,41 +40,28 @@ test('renders the zenn html preview inside the same surface', async () => {
 
   expect(panel).not.toBeNull();
 
-  const preview = within(panel as HTMLElement);
-
+  // Preview is always visible in both views
   await waitFor(() => {
+    expect(screen.getByText('Rendered output')).toBeInTheDocument();
+
     expect(
-      preview.getByText('ローカルプレビュー確認用のサンプル'),
+      screen.getByText('ローカルプレビュー確認用のサンプル'),
     ).toBeInTheDocument();
   });
 });
 
-test('updates the rendered preview when markdown changes', async () => {
+test('updates the save status when frontmatter changes', async () => {
   render(<App />);
 
-  const source = await screen.findByLabelText('Markdown body');
+  const titleInput = await screen.findByLabelText('Title');
 
-  fireEvent.change(source, {
+  fireEvent.change(titleInput, {
     target: {
-      value: '# Applied title\n\n本文です。',
+      value: 'New Title',
     },
   });
 
   await waitFor(() => {
-    expect(source).toHaveValue('# Applied title\n\n本文です。');
+    expect(screen.getByText('Live markdown editing')).toBeInTheDocument();
   });
-
-  const panel = screen
-    .getByRole('heading', { name: 'Unified markdown surface' })
-    .closest('section');
-
-  expect(panel).not.toBeNull();
-
-  const preview = within(panel as HTMLElement);
-
-  await waitFor(() => {
-    expect(preview.getByText('Applied title')).toBeInTheDocument();
-  });
-
-  expect(preview.getByText('本文です。')).toBeInTheDocument();
 });

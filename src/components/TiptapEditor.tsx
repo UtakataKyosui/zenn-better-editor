@@ -1,0 +1,90 @@
+import { Markdown } from '@tiptap/markdown';
+import { EditorContent, useEditor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import { useEffect, useRef } from 'react';
+import { ZennDetails, ZennMessage } from '../tiptap/extensions/zenn-nodes';
+
+type TiptapEditorProps = {
+  markdown: string;
+  onChange: (markdown: string) => void;
+  /** Pre-rendered HTML (from zenn-markdown-html) used for initial content parsing */
+  initialHtml?: string;
+  onScroll?: (scrollTop: number) => void;
+  className?: string;
+  id?: string;
+};
+
+export const TiptapEditor = ({
+  markdown,
+  onChange,
+  initialHtml,
+  onScroll,
+  className,
+  id,
+}: TiptapEditorProps) => {
+  const isUpdatingRef = useRef(false);
+  const hasInitializedRef = useRef(false);
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Markdown.configure({
+        html: true,
+        // biome-ignore lint/suspicious/noExplicitAny: Extending internal options
+      } as any),
+      ZennMessage,
+      ZennDetails,
+    ],
+    // Start with pre-rendered HTML so Zenn-specific blocks are parsed
+    // by our custom node extensions via parseHTML rules
+    content: initialHtml || markdown,
+    editorProps: {
+      attributes: {
+        class: className || '',
+        id: id || '',
+        'aria-label': 'Markdown body',
+      },
+    },
+    onUpdate: ({ editor }) => {
+      isUpdatingRef.current = true;
+      // biome-ignore lint/suspicious/noExplicitAny: Tiptap types might be incomplete
+      const updatedMarkdown =
+        (editor.storage.markdown as any)?.getMarkdown?.() || '';
+      onChange(updatedMarkdown);
+
+      setTimeout(() => {
+        isUpdatingRef.current = false;
+      }, 0);
+    },
+  });
+
+  // When the editor is created and initialHtml is available, set it once
+  useEffect(() => {
+    if (!editor || hasInitializedRef.current) return;
+    if (initialHtml) {
+      editor.commands.setContent(initialHtml);
+      hasInitializedRef.current = true;
+    }
+  }, [editor, initialHtml]);
+
+  useEffect(() => {
+    if (!editor || isUpdatingRef.current) return;
+
+    // biome-ignore lint/suspicious/noExplicitAny: Tiptap types might be incomplete
+    const currentMarkdown =
+      (editor.storage.markdown as any)?.getMarkdown?.() || '';
+    if (currentMarkdown !== markdown) {
+      editor.commands.setContent(markdown);
+    }
+  }, [markdown, editor]);
+
+  return (
+    <div
+      className="tiptap-scroll-container"
+      onScroll={(e) => onScroll?.(e.currentTarget.scrollTop)}
+      style={{ overflowY: 'auto', height: '100%' }}
+    >
+      <EditorContent editor={editor} />
+    </div>
+  );
+};
