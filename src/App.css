@@ -408,6 +408,10 @@ button {
   font-size: 0.92rem;
 }
 
+.hybrid-surface.is-seamless .source-label {
+  color: #475569;
+}
+
 .preview-toolbar {
   justify-content: space-between;
   margin-bottom: 16px;
@@ -511,6 +515,22 @@ button {
   overflow-y: auto;
 }
 
+.source-editor--wysiwyg {
+  min-height: 420px;
+  border-radius: 16px;
+  background: #fff;
+  color: #0f172a;
+  line-height: 1.8;
+  font-family:
+    'IBM Plex Sans',
+    'Noto Sans JP',
+    sans-serif;
+}
+
+.source-editor--wysiwyg:focus {
+  border-color: rgba(56, 189, 248, 0.45);
+}
+
 .source-editor--frontmatter {
   min-height: 180px;
   margin-bottom: 20px;
@@ -576,6 +596,23 @@ button {
 
 .ProseMirror .zenn-details__content {
   padding: 14px 18px;
+}
+
+.source-editor--wysiwyg .zenn-message--info {
+  background: linear-gradient(135deg, #ecfeff 0%, #f0fdf4 100%);
+  border-left-color: #0891b2;
+  color: #0f172a;
+}
+
+.source-editor--wysiwyg .zenn-message--alert {
+  background: linear-gradient(135deg, #fff7ed 0%, #fff1f2 100%);
+  border-left-color: #f97316;
+  color: #7c2d12;
+}
+
+.source-editor--wysiwyg .zenn-details summary {
+  background: #f1f5f9;
+  color: #334155;
 }
 
 .source-editor:focus,

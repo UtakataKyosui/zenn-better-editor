@@ -21,17 +21,24 @@ test('renders the markdown-first workspace', async () => {
   expect(
     screen.getByRole('heading', { name: 'Unified markdown surface' }),
   ).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /Split View|Seamless View/i })).toBeInTheDocument();
+  expect(
+    screen.getByRole('button', { name: /Split View|Seamless View/i }),
+  ).toBeInTheDocument();
   // Frontmatter fields are now structured widgets, not a single textarea
   expect(screen.getByLabelText('Title')).toBeInTheDocument();
   expect(screen.getByLabelText('Emoji')).toBeInTheDocument();
-  expect(screen.getByLabelText('Markdown body')).toBeInTheDocument();
+  expect(
+    screen.getByText('WYSIWYG body (type directly in preview)'),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByLabelText('WYSIWYG body (type directly in preview)'),
+  ).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Open .md' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
-  expect(screen.getByText('Markdown direct input')).toBeInTheDocument();
+  expect(screen.getByText('WYSIWYG direct input')).toBeInTheDocument();
 });
 
-test('renders the zenn html preview inside the same surface', async () => {
+test('uses WYSIWYG editing in seamless mode and keeps split preview mode', async () => {
   render(<App />);
 
   const panel = screen
@@ -40,13 +47,19 @@ test('renders the zenn html preview inside the same surface', async () => {
 
   expect(panel).not.toBeNull();
 
-  // Preview is always visible in both views
   await waitFor(() => {
-    expect(screen.getByText('Rendered output')).toBeInTheDocument();
-
     expect(
       screen.getByText('ローカルプレビュー確認用のサンプル'),
     ).toBeInTheDocument();
+  });
+
+  // In seamless mode, body editing happens directly in the preview-like editor.
+  expect(screen.queryByText('Rendered output')).not.toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('button', { name: 'Split View' }));
+
+  await waitFor(() => {
+    expect(screen.getByText('Rendered output')).toBeInTheDocument();
   });
 });
 

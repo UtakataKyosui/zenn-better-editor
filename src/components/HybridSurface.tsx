@@ -20,6 +20,13 @@ export const HybridSurface = ({
   onChangeBody,
   onToggleSeamless,
 }: HybridSurfaceProps) => {
+  const editorLabel = isSeamless
+    ? 'WYSIWYG body (type directly in preview)'
+    : 'Markdown body';
+  const editorClassName = isSeamless
+    ? 'source-editor source-editor--fused source-editor--wysiwyg znc'
+    : 'source-editor source-editor--fused tiptap-prose';
+
   return (
     <section className="workspace-grid">
       <section className="panel">
@@ -50,11 +57,12 @@ export const HybridSurface = ({
               />
 
               <label className="source-label" htmlFor="markdown-editor">
-                Markdown body
+                {editorLabel}
               </label>
               <TiptapEditor
                 id="markdown-editor"
-                className="source-editor source-editor--fused tiptap-prose"
+                className={editorClassName}
+                ariaLabel={editorLabel}
                 markdown={body}
                 initialHtml={renderedHtml}
                 onChange={onChangeBody}
@@ -66,15 +74,16 @@ export const HybridSurface = ({
               <div className="hybrid-surface__divider" aria-hidden="true" />
             )}
 
-            {/* Preview: always shown, but in seamless mode it's stacked below */}
-            <div className="hybrid-surface__render">
-              <p className="panel-label">Rendered output</p>
-              <div
-                className="hybrid-surface__preview preview-surface__content znc"
-                // biome-ignore lint/security/noDangerouslySetInnerHtml: intentionally rendering markdown output
-                dangerouslySetInnerHTML={{ __html: renderedHtml }}
-              />
-            </div>
+            {!isSeamless && (
+              <div className="hybrid-surface__render">
+                <p className="panel-label">Rendered output</p>
+                <div
+                  className="hybrid-surface__preview preview-surface__content znc"
+                  // biome-ignore lint/security/noDangerouslySetInnerHtml: intentionally rendering markdown output
+                  dangerouslySetInnerHTML={{ __html: renderedHtml }}
+                />
+              </div>
+            )}
           </div>
         </div>
       </section>

@@ -21,11 +21,13 @@ export const HeroPanel = ({
 }: HeroPanelProps) => {
   return (
     <section className="hero-panel">
-      <p className="eyebrow">Phase 2: Markdown-first live preview</p>
+      <p className="eyebrow">Phase 3: WYSIWYG-first editing</p>
       <h1>Rich Zenn Editor</h1>
       <p className="hero-copy">
-        YAML Frontmatter と Markdown 本文を分離して編集しながら、同じ面の中で
-        `zenn-markdown-html` のレンダリング結果を即時確認します。
+        YAML Frontmatter
+        を管理しつつ、本文はプレビューの見た目のまま直接編集できます。
+        必要なときだけ Split View に切り替えて、read-only
+        の最終レンダリングを確認できます。
       </p>
       <div className="file-strip" role="toolbar" aria-label="document controls">
         <button type="button" onClick={onCreateNewDraft}>
@@ -46,7 +48,7 @@ export const HeroPanel = ({
       <output className="status-strip" aria-label="editor status">
         <span>{wordCount} words</span>
         <span>{readingMinutes} min read</span>
-        <span>Markdown direct input</span>
+        <span>WYSIWYG direct input</span>
         <span>Preview synced live</span>
       </output>
     </section>

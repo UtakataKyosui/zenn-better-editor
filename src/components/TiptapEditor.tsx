@@ -12,6 +12,7 @@ type TiptapEditorProps = {
   onScroll?: (scrollTop: number) => void;
   className?: string;
   id?: string;
+  ariaLabel?: string;
 };
 
 export const TiptapEditor = ({
@@ -21,6 +22,7 @@ export const TiptapEditor = ({
   onScroll,
   className,
   id,
+  ariaLabel,
 }: TiptapEditorProps) => {
   const isUpdatingRef = useRef(false);
   const hasInitializedRef = useRef(false);
@@ -42,7 +44,7 @@ export const TiptapEditor = ({
       attributes: {
         class: className || '',
         id: id || '',
-        'aria-label': 'Markdown body',
+        'aria-label': ariaLabel || 'Markdown body',
       },
     },
     onUpdate: ({ editor }) => {
@@ -66,6 +68,20 @@ export const TiptapEditor = ({
       hasInitializedRef.current = true;
     }
   }, [editor, initialHtml]);
+
+  useEffect(() => {
+    if (!editor) return;
+
+    editor.setOptions({
+      editorProps: {
+        attributes: {
+          class: className || '',
+          id: id || '',
+          'aria-label': ariaLabel || 'Markdown body',
+        },
+      },
+    });
+  }, [editor, className, id, ariaLabel]);
 
   useEffect(() => {
     if (!editor || isUpdatingRef.current) return;
