@@ -1,5 +1,5 @@
 import { expect, test } from '@rstest/core';
-import { render, waitFor } from '@testing-library/react';
+import { fireEvent, render, waitFor } from '@testing-library/react';
 import markdownToHtml from 'zenn-markdown-html';
 import { TiptapEditor } from '../src/components/TiptapEditor';
 
@@ -62,6 +62,205 @@ test('keeps multi-line diff code blocks as multiple lines', async () => {
       const code = container.querySelector('pre code');
       expect(code).not.toBeNull();
       expect(code?.textContent?.includes('\n')).toBe(true);
+    },
+    { timeout: 5000 },
+  );
+});
+
+test('shows mermaid preview widget for mermaid code blocks', async () => {
+  const markdown = ['```mermaid', 'graph TD', 'A-->B', '```', ''].join('\n');
+  const initialHtml = await markdownToHtml(markdown);
+
+  const { container } = render(
+    <TiptapEditor
+      markdown={markdown}
+      initialHtml={initialHtml}
+      onChange={() => {}}
+      className="source-editor source-editor--fused source-editor--wysiwyg znc"
+      ariaLabel="WYSIWYG body"
+    />,
+  );
+
+  await waitFor(
+    () => {
+      expect(container.querySelector('.tiptap-mermaid-preview')).not.toBeNull();
+    },
+    { timeout: 5000 },
+  );
+});
+
+test('opens a mermaid edit modal from preview widget', async () => {
+  const markdown = ['```mermaid', 'graph TD', 'A-->B', '```', ''].join('\n');
+  const initialHtml = await markdownToHtml(markdown);
+
+  const { container } = render(
+    <TiptapEditor
+      markdown={markdown}
+      initialHtml={initialHtml}
+      onChange={() => {}}
+      className="source-editor source-editor--fused source-editor--wysiwyg znc"
+      ariaLabel="WYSIWYG body"
+    />,
+  );
+
+  await waitFor(
+    () => {
+      expect(container.querySelector('.tiptap-mermaid-preview__edit')).not.toBeNull();
+    },
+    { timeout: 5000 },
+  );
+
+  const editButton = container.querySelector(
+    '.tiptap-mermaid-preview__edit',
+  ) as HTMLButtonElement;
+  fireEvent.click(editButton);
+
+  await waitFor(() => {
+    const textarea = container.querySelector(
+      '.tiptap-mermaid-modal__input',
+    ) as HTMLTextAreaElement | null;
+    expect(textarea).not.toBeNull();
+    expect(textarea?.value).toContain('graph TD');
+  });
+});
+
+test('opens mermaid modal with mermaid source even when ts blocks exist', async () => {
+  const markdown = [
+    '```mermaid',
+    'graph TD',
+    'A-->B',
+    '```',
+    '',
+    '```ts',
+    'export const previewTarget = {',
+    "  mode: 'markdown-direct',",
+    "  renderer: 'zenn-markdown-html',",
+    "  target: 'all-patterns-from-markdown-guide',",
+    '};',
+    '```',
+    '',
+  ].join('\n');
+  const initialHtml = await markdownToHtml(markdown);
+
+  const { container } = render(
+    <TiptapEditor
+      markdown={markdown}
+      initialHtml={initialHtml}
+      onChange={() => {}}
+      className="source-editor source-editor--fused source-editor--wysiwyg znc"
+      ariaLabel="WYSIWYG body"
+    />,
+  );
+
+  await waitFor(
+    () => {
+      expect(container.querySelector('.tiptap-mermaid-preview__edit')).not.toBeNull();
+    },
+    { timeout: 5000 },
+  );
+
+  const editButton = container.querySelector(
+    '.tiptap-mermaid-preview__edit',
+  ) as HTMLButtonElement;
+  fireEvent.click(editButton);
+
+  await waitFor(() => {
+    const textarea = container.querySelector(
+      '.tiptap-mermaid-modal__input',
+    ) as HTMLTextAreaElement | null;
+    expect(textarea).not.toBeNull();
+    expect(textarea?.value).toContain('graph TD');
+    expect(textarea?.value).not.toContain('previewTarget');
+  });
+});
+
+test('keeps mermaid preview available for untyped mermaid-like code blocks', async () => {
+  const markdown = ['```', 'graph TD', 'A-->B', '```', ''].join('\n');
+  const initialHtml = await markdownToHtml(markdown);
+
+  const { container } = render(
+    <TiptapEditor
+      markdown={markdown}
+      initialHtml={initialHtml}
+      onChange={() => {}}
+      className="source-editor source-editor--fused source-editor--wysiwyg znc"
+      ariaLabel="WYSIWYG body"
+    />,
+  );
+
+  await waitFor(
+    () => {
+      expect(container.querySelector('.tiptap-mermaid-preview__edit')).not.toBeNull();
+    },
+    { timeout: 5000 },
+  );
+
+  const editButton = container.querySelector(
+    '.tiptap-mermaid-preview__edit',
+  ) as HTMLButtonElement;
+  fireEvent.click(editButton);
+
+  await waitFor(() => {
+    const textarea = container.querySelector(
+      '.tiptap-mermaid-modal__input',
+    ) as HTMLTextAreaElement | null;
+    expect(textarea).not.toBeNull();
+    expect(textarea?.value).toContain('graph TD');
+  });
+});
+
+test('shows mermaid preview when the fence info has a title suffix', async () => {
+  const markdown = [
+    '```mermaid:architecture.mmd',
+    'graph TD',
+    'A-->B',
+    '```',
+    '',
+  ].join('\n');
+  const initialHtml = await markdownToHtml(markdown);
+
+  const { container } = render(
+    <TiptapEditor
+      markdown={markdown}
+      initialHtml={initialHtml}
+      onChange={() => {}}
+      className="source-editor source-editor--fused source-editor--wysiwyg znc"
+      ariaLabel="WYSIWYG body"
+    />,
+  );
+
+  await waitFor(
+    () => {
+      expect(container.querySelector('.tiptap-mermaid-preview__edit')).not.toBeNull();
+    },
+    { timeout: 5000 },
+  );
+});
+
+test('keeps mermaid preview for init directive blocks without an explicit language', async () => {
+  const markdown = [
+    '```',
+    "%%{init: {'theme':'default'}}%%",
+    'graph TD',
+    'A-->B',
+    '```',
+    '',
+  ].join('\n');
+  const initialHtml = await markdownToHtml(markdown);
+
+  const { container } = render(
+    <TiptapEditor
+      markdown={markdown}
+      initialHtml={initialHtml}
+      onChange={() => {}}
+      className="source-editor source-editor--fused source-editor--wysiwyg znc"
+      ariaLabel="WYSIWYG body"
+    />,
+  );
+
+  await waitFor(
+    () => {
+      expect(container.querySelector('.tiptap-mermaid-preview__edit')).not.toBeNull();
     },
     { timeout: 5000 },
   );

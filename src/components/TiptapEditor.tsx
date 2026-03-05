@@ -2,7 +2,11 @@ import { Markdown } from '@tiptap/markdown';
 import { Mathematics } from '@tiptap/extension-mathematics';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  MermaidPreview,
+  type MermaidEditPayload,
+} from '../tiptap/extensions/mermaid-preview';
 import { ZennDetails, ZennMessage } from '../tiptap/extensions/zenn-nodes';
 import { ZennShikiCodeHighlight } from '../tiptap/extensions/shiki-code-highlight';
 import { normalizeZennHtmlForTiptap } from '../utils/zenn-html';
@@ -29,10 +33,18 @@ export const TiptapEditor = ({
 }: TiptapEditorProps) => {
   const isUpdatingRef = useRef(false);
   const hasInitializedRef = useRef(false);
+  const [mermaidModal, setMermaidModal] = useState<MermaidEditPayload | null>(
+    null,
+  );
+  const [mermaidDraft, setMermaidDraft] = useState('');
   const normalizedInitialHtml = useMemo(
     () => normalizeZennHtmlForTiptap(initialHtml || '', markdown),
     [initialHtml, markdown],
   );
+  const handleOpenMermaidEditor = useCallback((payload: MermaidEditPayload) => {
+    setMermaidModal(payload);
+    setMermaidDraft(payload.source);
+  }, []);
 
   const editor = useEditor({
     extensions: [
@@ -57,6 +69,9 @@ export const TiptapEditor = ({
         theme: 'github-dark',
         defaultLanguage: 'text',
       }),
+      MermaidPreview.configure({
+        onEdit: handleOpenMermaidEditor,
+      }),
     ],
     // Start with pre-rendered HTML so Zenn-specific blocks are parsed
     // by our custom node extensions via parseHTML rules
@@ -80,6 +95,21 @@ export const TiptapEditor = ({
       }, 0);
     },
   });
+
+  useEffect(() => {
+    if (!mermaidModal) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMermaidModal(null);
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [mermaidModal]);
 
   // When the editor is created and initialHtml is available, set it once
   useEffect(() => {
@@ -129,6 +159,40 @@ export const TiptapEditor = ({
     }
   }, [markdown, normalizedInitialHtml, editor]);
 
+  const applyMermaidChanges = useCallback(() => {
+    if (!editor || !mermaidModal) return;
+
+    const nextSource = mermaidDraft.replace(/\r\n?/g, '\n');
+    const updated = editor.commands.command(({ state, tr, dispatch }) => {
+      const targetNode = state.doc.nodeAt(mermaidModal.pos);
+      if (!targetNode || targetNode.type.name !== 'codeBlock') {
+        return false;
+      }
+
+      const codeBlockType = state.schema.nodes.codeBlock;
+      const nextContent = nextSource ? [state.schema.text(nextSource)] : undefined;
+      const nextNode = codeBlockType.create(
+        {
+          ...targetNode.attrs,
+          language: targetNode.attrs.language || mermaidModal.language,
+        },
+        nextContent,
+      );
+
+      tr.replaceWith(
+        mermaidModal.pos,
+        mermaidModal.pos + targetNode.nodeSize,
+        nextNode,
+      );
+      dispatch?.(tr);
+      return true;
+    });
+
+    if (updated) {
+      setMermaidModal(null);
+    }
+  }, [editor, mermaidDraft, mermaidModal]);
+
   return (
     <div
       className="tiptap-scroll-container"
@@ -136,6 +200,51 @@ export const TiptapEditor = ({
       style={{ overflowY: 'auto', height: '100%' }}
     >
       <EditorContent editor={editor} />
+      {mermaidModal && (
+        <div
+          className="tiptap-mermaid-modal-backdrop"
+          role="presentation"
+          onClick={() => setMermaidModal(null)}
+        >
+          <section
+            className="tiptap-mermaid-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Edit Mermaid diagram"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="tiptap-mermaid-modal__header">
+              <h3>Edit Mermaid</h3>
+              <p>Update the Mermaid source and apply it to this block.</p>
+            </header>
+
+            <textarea
+              className="tiptap-mermaid-modal__input"
+              value={mermaidDraft}
+              onChange={(event) => setMermaidDraft(event.target.value)}
+              spellCheck={false}
+              aria-label="Mermaid source"
+            />
+
+            <footer className="tiptap-mermaid-modal__actions">
+              <button
+                type="button"
+                className="tiptap-mermaid-modal__btn tiptap-mermaid-modal__btn--ghost"
+                onClick={() => setMermaidModal(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="tiptap-mermaid-modal__btn"
+                onClick={applyMermaidChanges}
+              >
+                Apply
+              </button>
+            </footer>
+          </section>
+        </div>
+      )}
     </div>
   );
 };

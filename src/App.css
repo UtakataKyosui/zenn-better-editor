@@ -516,6 +516,128 @@ button {
   overflow-x: auto;
 }
 
+.source-editor--wysiwyg .tiptap-mermaid-preview {
+  margin: 0.8rem 0 1.4rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #fff;
+}
+
+.source-editor--wysiwyg .tiptap-mermaid-preview__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.source-editor--wysiwyg .tiptap-mermaid-preview__label {
+  margin: 0;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.source-editor--wysiwyg .tiptap-mermaid-preview__edit {
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 5px 10px;
+}
+
+.source-editor--wysiwyg .tiptap-mermaid-preview__canvas {
+  overflow-x: auto;
+}
+
+.source-editor--wysiwyg .tiptap-mermaid-preview__canvas svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+.source-editor--wysiwyg .tiptap-mermaid-preview__canvas--error {
+  color: #b91c1c;
+  font-size: 0.9rem;
+}
+
+.tiptap-mermaid-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.62);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 50;
+}
+
+.tiptap-mermaid-modal {
+  width: min(780px, 100%);
+  max-height: min(86vh, 760px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 14px;
+  padding: 18px;
+  background: #fff;
+  color: #0f172a;
+}
+
+.tiptap-mermaid-modal__header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.tiptap-mermaid-modal__header p {
+  margin: 6px 0 0;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.tiptap-mermaid-modal__input {
+  width: 100%;
+  min-height: 280px;
+  flex: 1;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 10px;
+  padding: 12px 14px;
+  resize: vertical;
+  line-height: 1.6;
+  font-family:
+    'IBM Plex Mono',
+    'JetBrains Mono',
+    monospace;
+}
+
+.tiptap-mermaid-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.tiptap-mermaid-modal__btn {
+  border: 1px solid rgba(30, 64, 175, 0.55);
+  border-radius: 999px;
+  background: #1d4ed8;
+  color: #fff;
+  padding: 7px 14px;
+  font-weight: 600;
+}
+
+.tiptap-mermaid-modal__btn--ghost {
+  background: #fff;
+  color: #0f172a;
+  border-color: rgba(148, 163, 184, 0.45);
+}
+
 .source-editor--wysiwyg:focus {
   border-color: rgba(56, 189, 248, 0.45);
 }

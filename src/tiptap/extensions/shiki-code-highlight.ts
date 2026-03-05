@@ -21,6 +21,7 @@ type ShikiCodeHighlightOptions = {
   nodeName: string;
   theme: string;
   defaultLanguage: string;
+  ignoreLanguages: string[];
 };
 
 const SHIKI_REFRESH_META = 'zenn-shiki-refresh';
@@ -100,6 +101,7 @@ const buildDecorations = ({
   nodeName,
   theme,
   defaultLanguage,
+  ignoredLanguages,
   tokenCache,
   pendingRequests,
   dispatchRefresh,
@@ -108,6 +110,7 @@ const buildDecorations = ({
   nodeName: string;
   theme: string;
   defaultLanguage: string;
+  ignoredLanguages: Set<string>;
   tokenCache: Map<string, ShikiToken[][]>;
   pendingRequests: Set<string>;
   dispatchRefresh: () => void;
@@ -119,6 +122,9 @@ const buildDecorations = ({
     if (!source.trim()) return;
 
     const language = (block.node.attrs.language || defaultLanguage) as string;
+    if (ignoredLanguages.has(language.toLowerCase())) {
+      return;
+    }
     const cacheKey = `${language}\u0000${source}`;
     const cachedTokens = tokenCache.get(cacheKey);
 
@@ -177,17 +183,21 @@ export const ZennShikiCodeHighlight = Extension.create<ShikiCodeHighlightOptions
     name: 'zennShikiCodeHighlight',
 
     addOptions() {
-      return {
-        nodeName: 'codeBlock',
-        theme: 'github-dark',
-        defaultLanguage: 'text',
-      };
-    },
+    return {
+      nodeName: 'codeBlock',
+      theme: 'github-dark',
+      defaultLanguage: 'text',
+      ignoreLanguages: ['mermaid', 'mmd'],
+    };
+  },
 
     addProseMirrorPlugins() {
       const tokenCache = new Map<string, ShikiToken[][]>();
       const pendingRequests = new Set<string>();
       const pluginKey = new PluginKey<DecorationSet>('zenn-shiki-code-highlight');
+      const ignoredLanguages = new Set(
+        this.options.ignoreLanguages.map((lang) => lang.toLowerCase()),
+      );
 
       return [
         new Plugin<DecorationSet>({
@@ -200,6 +210,7 @@ export const ZennShikiCodeHighlight = Extension.create<ShikiCodeHighlightOptions
                 nodeName: this.options.nodeName,
                 theme: this.options.theme,
                 defaultLanguage: this.options.defaultLanguage,
+                ignoredLanguages,
                 tokenCache,
                 pendingRequests,
                 dispatchRefresh: () => {
@@ -218,6 +229,7 @@ export const ZennShikiCodeHighlight = Extension.create<ShikiCodeHighlightOptions
                   nodeName: this.options.nodeName,
                   theme: this.options.theme,
                   defaultLanguage: this.options.defaultLanguage,
+                  ignoredLanguages,
                   tokenCache,
                   pendingRequests,
                   dispatchRefresh: () => {

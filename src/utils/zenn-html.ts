@@ -12,30 +12,60 @@ const parseFenceLanguage = (fenceInfo: string) => {
   return language.toLowerCase();
 };
 
-const extractFencedLanguages = (markdown: string) => {
-  const languages: string[] = [];
-  const pattern = /^```([^\r\n]*)[\t ]*\r?\n[\s\S]*?^```[\t ]*$/gm;
+const normalizeCodeContent = (value: string) => {
+  return value.replace(/\r\n?/g, '\n').trimEnd();
+};
+
+type FencedBlock = {
+  language: string;
+  content: string;
+};
+
+const extractFencedBlocks = (markdown: string): FencedBlock[] => {
+  const blocks: FencedBlock[] = [];
+  const pattern = /^```([^\r\n]*)[\t ]*\r?\n([\s\S]*?)^```[\t ]*$/gm;
   let match = pattern.exec(markdown);
 
   while (match) {
     const language = parseFenceLanguage(match[1]);
-    languages.push(language);
+    const content = normalizeCodeContent(match[2] || '');
+    blocks.push({ language, content });
     match = pattern.exec(markdown);
   }
 
-  return languages;
+  return blocks;
 };
 
 const injectCodeLanguages = (root: HTMLElement, markdown: string) => {
-  const languages = extractFencedLanguages(markdown);
-  if (languages.length === 0) return;
+  const fencedBlocks = extractFencedBlocks(markdown);
+  if (fencedBlocks.length === 0) return;
 
   const codeNodes = Array.from(
-    root.querySelectorAll('div.code-block-container > pre.shiki > code'),
+    root.querySelectorAll('div.code-block-container > pre > code'),
   );
+  const usedBlockIndexes = new Set<number>();
+  let fallbackCursor = 0;
 
-  codeNodes.forEach((codeNode, index) => {
-    const language = languages[index];
+  codeNodes.forEach((codeNode) => {
+    const codeContent = normalizeCodeContent(codeNode.textContent || '');
+    let blockIndex = fencedBlocks.findIndex(
+      (block, index) =>
+        !usedBlockIndexes.has(index) && block.content === codeContent,
+    );
+
+    if (blockIndex < 0) {
+      while (usedBlockIndexes.has(fallbackCursor)) {
+        fallbackCursor += 1;
+      }
+      blockIndex = fallbackCursor;
+    }
+
+    const block = fencedBlocks[blockIndex];
+    fallbackCursor = Math.max(fallbackCursor, blockIndex + 1);
+    if (!block) return;
+    usedBlockIndexes.add(blockIndex);
+
+    const language = block.language;
     if (!language) return;
     codeNode.classList.add(`language-${language}`);
   });
@@ -56,6 +86,44 @@ const flattenShikiCodeToPlainText = (root: HTMLElement) => {
     }
 
     codeNode.textContent = lines.join('\n');
+  });
+};
+
+const decodeMermaidPayload = (value: string) => {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+};
+
+const convertMermaidEmbedsToCodeBlocks = (root: HTMLElement) => {
+  const embeds = Array.from(
+    root.querySelectorAll(
+      'span.embed-block.zenn-embedded-mermaid iframe[data-content]',
+    ),
+  );
+
+  embeds.forEach((iframeNode) => {
+    const encoded = iframeNode.getAttribute('data-content') || '';
+    const source = decodeMermaidPayload(encoded).replace(/\r\n?/g, '\n');
+    const container = root.ownerDocument.createElement('div');
+    const pre = root.ownerDocument.createElement('pre');
+    const code = root.ownerDocument.createElement('code');
+
+    container.className = 'code-block-container';
+    code.classList.add('language-mermaid');
+    code.textContent = source;
+
+    pre.append(code);
+    container.append(pre);
+
+    const wrapper = iframeNode.closest('span.embed-block.zenn-embedded-mermaid');
+    if (wrapper) {
+      wrapper.replaceWith(container);
+    } else {
+      iframeNode.replaceWith(container);
+    }
   });
 };
 
@@ -104,6 +172,7 @@ export const normalizeZennHtmlForTiptap = (
     }
 
     flattenShikiCodeToPlainText(root);
+    convertMermaidEmbedsToCodeBlocks(root);
     injectCodeLanguages(root, markdown);
     convertZennMathNodes(root);
 
