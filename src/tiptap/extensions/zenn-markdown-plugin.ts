@@ -59,13 +59,13 @@ export const zennContainerPlugin = (md: MarkdownIt) => {
       tokenOpen.map = [startLine, nextLine];
 
       if (containerType === 'message') {
-        tokenOpen.attrSet('class', `zenn-message zenn-message--${param === 'alert' ? 'alert' : 'info'}`);
+        tokenOpen.tag = 'aside';
+        tokenOpen.attrSet('class', param === 'alert' ? 'msg alert' : 'msg message');
         tokenOpen.attrSet('data-variant', param === 'alert' ? 'alert' : 'info');
       } else if (containerType === 'details') {
         // We'll emit <details> with a <summary>
         tokenOpen.tag = 'details';
         tokenOpen.attrSet('class', 'zenn-details');
-        tokenOpen.attrSet('open', 'true');
         tokenOpen.attrSet('data-summary', param || 'Details');
       }
 
@@ -78,7 +78,7 @@ export const zennContainerPlugin = (md: MarkdownIt) => {
       // For details, add summary element
       if (containerType === 'details') {
         const summaryOpen = state.push('html_block', '', 0);
-        summaryOpen.content = `<summary>${param || 'Details'}</summary><div class="zenn-details__content">`;
+        summaryOpen.content = `<summary>${param || 'Details'}</summary><div class="details-content">`;
         summaryOpen.block = true;
       }
 
@@ -93,7 +93,11 @@ export const zennContainerPlugin = (md: MarkdownIt) => {
       state.parentType = oldParent;
       state.lineMax = oldLineMax;
 
-      const tokenClose = state.push(`zenn_${containerType}_close`, containerType === 'details' ? 'details' : 'div', -1);
+      const tokenClose = state.push(
+        `zenn_${containerType}_close`,
+        containerType === 'details' ? 'details' : 'aside',
+        -1,
+      );
       tokenClose.block = true;
 
       state.line = nextLine + 1;

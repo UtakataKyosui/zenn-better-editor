@@ -23,8 +23,11 @@ export const ZennMessage = Node.create({
     return {
       variant: {
         default: 'info',
-        parseHTML: (element) =>
-          element.getAttribute('data-variant') || 'info',
+        parseHTML: (element) => {
+          const className = element.getAttribute('class') || '';
+          if (className.includes('alert')) return 'alert';
+          return element.getAttribute('data-variant') || 'info';
+        },
         renderHTML: (attributes) => ({
           'data-variant': attributes.variant,
         }),
@@ -40,12 +43,16 @@ export const ZennMessage = Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
+    const variant = HTMLAttributes['data-variant'] || 'info';
+    const className = variant === 'alert' ? 'msg alert' : 'msg message';
+
     return [
-      'div',
+      'aside',
       mergeAttributes(HTMLAttributes, {
-        class: `zenn-message zenn-message--${HTMLAttributes['data-variant'] || 'info'}`,
+        class: className,
       }),
-      0,
+      ['span', { class: 'msg-symbol' }, '!'],
+      ['div', { class: 'msg-content' }, 0],
     ];
   },
 
@@ -106,10 +113,7 @@ export const ZennDetails = Node.create({
   },
 
   parseHTML() {
-    return [
-      { tag: 'details.zenn-details' },
-      { tag: 'details' },
-    ];
+    return [{ tag: 'details.zenn-details' }, { tag: 'details' }];
   },
 
   renderHTML({ HTMLAttributes }) {
@@ -118,10 +122,9 @@ export const ZennDetails = Node.create({
       'details',
       mergeAttributes(HTMLAttributes, {
         class: 'zenn-details',
-        open: 'true',
       }),
       ['summary', {}, summary],
-      ['div', { class: 'zenn-details__content' }, 0],
+      ['div', { class: 'details-content' }, 0],
     ];
   },
 });

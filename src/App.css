@@ -461,59 +461,6 @@ button {
   overflow-wrap: anywhere;
 }
 
-.zenn-message-block {
-  margin: 0 0 18px;
-  padding: 16px 18px;
-  border-radius: 18px;
-  background: linear-gradient(135deg, #ecfeff 0%, #f0fdf4 100%);
-  border: 1px solid #a5f3fc;
-}
-
-.zenn-message-block__label,
-.zenn-card-block__eyebrow {
-  display: inline-block;
-  margin-bottom: 8px;
-  color: #0f766e;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.zenn-details-block {
-  margin-bottom: 18px;
-  padding: 14px 16px;
-  border: 1px solid #cbd5e1;
-  border-radius: 18px;
-  background: #f8fafc;
-}
-
-.zenn-details-block summary {
-  cursor: pointer;
-  font-weight: 700;
-}
-
-.zenn-card-block {
-  display: grid;
-  gap: 6px;
-  margin-bottom: 18px;
-  padding: 16px 18px;
-  border-radius: 18px;
-  border: 1px solid #bfdbfe;
-  background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
-  color: #1d4ed8;
-  text-decoration: none;
-}
-
-.zenn-card-block span:last-child {
-  color: #475569;
-  font-size: 0.9rem;
-}
-
-.zenn-code-block {
-  margin: 0 0 18px;
-}
-
 .source-editor {
   width: 100%;
   min-height: 540px;
@@ -570,69 +517,6 @@ button {
 .seamless-tiptap-editor:focus {
   outline: 2px solid rgba(56, 189, 248, 0.45);
   outline-offset: -2px;
-}
-
-/* ── Zenn Container Blocks (inside Tiptap) ── */
-
-.ProseMirror .zenn-message {
-  border-radius: 10px;
-  padding: 16px 18px;
-  margin: 12px 0;
-  border-left: 4px solid;
-}
-
-.ProseMirror .zenn-message--info {
-  background: rgba(56, 189, 248, 0.08);
-  border-left-color: #38bdf8;
-  color: #e0f2fe;
-}
-
-.ProseMirror .zenn-message--alert {
-  background: rgba(251, 146, 60, 0.1);
-  border-left-color: #fb923c;
-  color: #ffedd5;
-}
-
-.ProseMirror .zenn-details {
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  border-radius: 10px;
-  margin: 12px 0;
-  overflow: hidden;
-}
-
-.ProseMirror .zenn-details summary {
-  padding: 10px 16px;
-  background: rgba(148, 163, 184, 0.08);
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: #94a3b8;
-  user-select: none;
-}
-
-.ProseMirror .zenn-details summary:hover {
-  background: rgba(148, 163, 184, 0.14);
-}
-
-.ProseMirror .zenn-details__content {
-  padding: 14px 18px;
-}
-
-.source-editor--wysiwyg .zenn-message--info {
-  background: linear-gradient(135deg, #ecfeff 0%, #f0fdf4 100%);
-  border-left-color: #0891b2;
-  color: #0f172a;
-}
-
-.source-editor--wysiwyg .zenn-message--alert {
-  background: linear-gradient(135deg, #fff7ed 0%, #fff1f2 100%);
-  border-left-color: #f97316;
-  color: #7c2d12;
-}
-
-.source-editor--wysiwyg .zenn-details summary {
-  background: #f1f5f9;
-  color: #334155;
 }
 
 .source-editor:focus,

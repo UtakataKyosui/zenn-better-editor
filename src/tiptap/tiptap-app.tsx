@@ -3,62 +3,20 @@ import markdownToHtml from 'zenn-markdown-html';
 import { HeroPanel } from '../components/HeroPanel';
 import { HybridSurface } from '../components/HybridSurface';
 import { INITIAL_MARKDOWN, MARKDOWN_FILE_TYPES } from '../constants/editor';
+import { serializeFrontmatter } from '../utils/frontmatter';
+import {
+  clearRecentFileHandle,
+  ensureHandlePermission,
+  loadRecentFileHandle,
+  saveRecentFileHandle,
+} from '../utils/file-system';
 import {
   countWords,
   mergeMarkdownParts,
   splitMarkdownParts,
   stripLeadingFrontmatter,
 } from '../utils/markdown';
-
-const DRAFT_FILE_NAME = 'rich-zenn-editor-draft.md';
-
-const getDraftDirectory = async () => {
-  if (
-    typeof navigator === 'undefined' ||
-    typeof navigator.storage?.getDirectory !== 'function'
-  ) {
-    return null;
-  }
-
-  try {
-    return await navigator.storage.getDirectory();
-  } catch {
-    return null;
-  }
-};
-
-const readDraftFromFileSystem = async () => {
-  const directory = await getDraftDirectory();
-  if (!directory) {
-    return null;
-  }
-
-  try {
-    const fileHandle = await directory.getFileHandle(DRAFT_FILE_NAME);
-    const file = await fileHandle.getFile();
-    return await file.text();
-  } catch {
-    return null;
-  }
-};
-
-const writeDraftToFileSystem = async (markdown: string) => {
-  const directory = await getDraftDirectory();
-  if (!directory) {
-    return;
-  }
-
-  try {
-    const fileHandle = await directory.getFileHandle(DRAFT_FILE_NAME, {
-      create: true,
-    });
-    const writable = await fileHandle.createWritable();
-    await writable.write(markdown);
-    await writable.close();
-  } catch {
-    // ignore write errors; manual save/open still works
-  }
-};
+import { validateWithZennModel } from '../utils/zenn-model';
 
 const shouldUseExternalEmbedOrigin = () => {
   if (typeof navigator === 'undefined') {
@@ -66,6 +24,18 @@ const shouldUseExternalEmbedOrigin = () => {
   }
 
   return !navigator.userAgent.includes('HappyDOM');
+};
+
+const createDefaultFrontmatter = (documentName: string) => {
+  const baseTitle = documentName.replace(/\.md$/i, '').trim() || 'untitled';
+
+  return serializeFrontmatter({
+    title: baseTitle,
+    emoji: '📝',
+    type: 'tech',
+    topics: [],
+    published: false,
+  });
 };
 
 const Tiptap = () => {
@@ -82,37 +52,71 @@ const Tiptap = () => {
   const markdown = useMemo(() => {
     return mergeMarkdownParts({ frontmatter, body });
   }, [frontmatter, body]);
+  const modelValidation = useMemo(
+    () =>
+      validateWithZennModel({
+        frontmatter,
+        bodyHtml: renderedHtml,
+        documentName,
+      }),
+    [frontmatter, renderedHtml, documentName],
+  );
 
   const loadMarkdownDocument = (nextMarkdown: string, nextName: string) => {
     const parts = splitMarkdownParts(nextMarkdown);
-    setFrontmatter(parts.frontmatter);
+    const nextFrontmatter = parts.frontmatter.trim()
+      ? parts.frontmatter
+      : createDefaultFrontmatter(nextName);
+    setFrontmatter(nextFrontmatter);
     setBody(parts.body);
     setDocumentName(nextName);
     setSaveStatus(`Loaded ${nextName}`);
   };
 
   useEffect(() => {
-    let cancelled = false;
+    let isMounted = true;
 
-    void readDraftFromFileSystem().then((savedDraft) => {
-      if (cancelled || !savedDraft) return;
-      loadMarkdownDocument(savedDraft, DRAFT_FILE_NAME);
-    });
+    void (async () => {
+      const rememberedHandle = await loadRecentFileHandle();
+      if (!isMounted || !rememberedHandle) {
+        return;
+      }
+
+      fileHandleRef.current = rememberedHandle;
+      const canRead = await ensureHandlePermission(
+        rememberedHandle,
+        'read',
+        false,
+      );
+      if (!isMounted) {
+        return;
+      }
+
+      if (!canRead) {
+        setDocumentName(rememberedHandle.name);
+        setSaveStatus(`Remembered ${rememberedHandle.name} (Open .md to grant access)`);
+        return;
+      }
+
+      try {
+        const file = await rememberedHandle.getFile();
+        const nextMarkdown = await file.text();
+        if (!isMounted) {
+          return;
+        }
+        loadMarkdownDocument(nextMarkdown, rememberedHandle.name);
+      } catch {
+        if (!isMounted) {
+          return;
+        }
+        setSaveStatus(`Failed to load ${rememberedHandle.name}`);
+      }
+    })();
 
     return () => {
-      cancelled = true;
+      isMounted = false;
     };
   }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      void writeDraftToFileSystem(markdown);
-    }, 300);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [markdown]);
 
   useEffect(() => {
     let cancelled = false;
@@ -142,22 +146,56 @@ const Tiptap = () => {
     void import('zenn-embed-elements');
   }, []);
 
+  const loadFromHandle = async (
+    handle: FileSystemFileHandle,
+    requestPermission: boolean,
+  ) => {
+    const canRead = await ensureHandlePermission(
+      handle,
+      'read',
+      requestPermission,
+    );
+    if (!canRead) {
+      setDocumentName(handle.name);
+      setSaveStatus(`Open .md to grant access: ${handle.name}`);
+      return false;
+    }
+
+    try {
+      const file = await handle.getFile();
+      const nextMarkdown = await file.text();
+      fileHandleRef.current = handle;
+      await saveRecentFileHandle(handle);
+      loadMarkdownDocument(nextMarkdown, handle.name);
+      return true;
+    } catch {
+      setSaveStatus(`Failed to load ${handle.name}`);
+      return false;
+    }
+  };
+
   const readFile = async (file: File) => {
+    fileHandleRef.current = null;
+    await clearRecentFileHandle();
     const nextMarkdown = await file.text();
     loadMarkdownDocument(nextMarkdown, file.name);
   };
 
   const openDocument = async () => {
     if (typeof window.showOpenFilePicker === 'function') {
-      const [fileHandle] = await window.showOpenFilePicker({
-        excludeAcceptAllOption: false,
-        multiple: false,
-        types: MARKDOWN_FILE_TYPES,
-      });
+      try {
+        const [fileHandle] = await window.showOpenFilePicker({
+          excludeAcceptAllOption: false,
+          multiple: false,
+          types: MARKDOWN_FILE_TYPES,
+        });
 
-      fileHandleRef.current = fileHandle;
-      const file = await fileHandle.getFile();
-      await readFile(file);
+        if (fileHandle) {
+          await loadFromHandle(fileHandle, true);
+        }
+      } catch {
+        // user canceled
+      }
       return;
     }
 
@@ -166,6 +204,7 @@ const Tiptap = () => {
 
   const createNewDraft = () => {
     fileHandleRef.current = null;
+    void clearRecentFileHandle();
     loadMarkdownDocument(INITIAL_MARKDOWN, 'untitled.md');
   };
 
@@ -182,27 +221,51 @@ const Tiptap = () => {
   };
 
   const saveToHandle = async (handle: FileSystemFileHandle) => {
-    const writable = await handle.createWritable();
-    await writable.write(markdown);
-    await writable.close();
-    fileHandleRef.current = handle;
-    setDocumentName(handle.name);
-    setSaveStatus(`Saved ${handle.name}`);
+    const canWrite = await ensureHandlePermission(handle, 'readwrite', true);
+    if (!canWrite) {
+      setSaveStatus(`Write permission denied: ${handle.name}`);
+      return false;
+    }
+
+    try {
+      const writable = await handle.createWritable();
+      await writable.write(markdown);
+      await writable.close();
+      fileHandleRef.current = handle;
+      await saveRecentFileHandle(handle);
+      setDocumentName(handle.name);
+      setSaveStatus(`Saved ${handle.name}`);
+      return true;
+    } catch {
+      setSaveStatus(`Failed to save ${handle.name}`);
+      return false;
+    }
   };
 
   const saveDocument = async () => {
+    if (modelValidation.criticalCount > 0) {
+      const firstCritical = modelValidation.errors.find((error) => error.isCritical);
+      const reason = firstCritical?.message || 'zenn-model critical validation errors';
+      setSaveStatus(`Cannot save: ${reason}`);
+      return;
+    }
+
     if (fileHandleRef.current) {
       await saveToHandle(fileHandleRef.current);
       return;
     }
 
     if (typeof window.showSaveFilePicker === 'function') {
-      const handle = await window.showSaveFilePicker({
-        suggestedName: documentName,
-        types: MARKDOWN_FILE_TYPES,
-      });
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: documentName,
+          types: MARKDOWN_FILE_TYPES,
+        });
 
-      await saveToHandle(handle);
+        await saveToHandle(handle);
+      } catch {
+        // user canceled
+      }
       return;
     }
 
@@ -217,6 +280,7 @@ const Tiptap = () => {
       <HeroPanel
         documentName={documentName}
         saveStatus={saveStatus}
+        modelStatus={modelValidation.summaryLabel}
         wordCount={wordCount}
         readingMinutes={readingMinutes}
         onCreateNewDraft={createNewDraft}

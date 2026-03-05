@@ -1,6 +1,7 @@
 type HeroPanelProps = {
   documentName: string;
   saveStatus: string;
+  modelStatus: string;
   wordCount: number;
   readingMinutes: number;
   onCreateNewDraft: () => void;
@@ -12,6 +13,7 @@ type HeroPanelProps = {
 export const HeroPanel = ({
   documentName,
   saveStatus,
+  modelStatus,
   wordCount,
   readingMinutes,
   onCreateNewDraft,
@@ -48,6 +50,7 @@ export const HeroPanel = ({
       <output className="status-strip" aria-label="editor status">
         <span>{wordCount} words</span>
         <span>{readingMinutes} min read</span>
+        <span>{modelStatus}</span>
         <span>WYSIWYG direct input</span>
         <span>Preview synced live</span>
       </output>
