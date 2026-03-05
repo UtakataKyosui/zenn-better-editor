@@ -53,4 +53,23 @@ describe('zenn html normalization', () => {
     expect(mermaidCode).not.toBeNull();
     expect(mermaidCode?.textContent).toContain('graph TD');
   });
+
+  it('annotates embed blocks with original markdown source and removes hidden fallback links', () => {
+    const markdown = '@[card](https://zenn.dev/zenn/articles/markdown-guide)\n';
+    const html = `<p><span class="embed-block zenn-embedded zenn-embedded-card"><iframe id="zenn-embedded__card" data-content="${encodeURIComponent('https://zenn.dev/zenn/articles/markdown-guide')}"></iframe></span><a href="https://zenn.dev/zenn/articles/markdown-guide" style="display:none">https://zenn.dev/zenn/articles/markdown-guide</a></p>`;
+    const normalized = normalizeZennHtmlForTiptap(html, markdown);
+    const doc = new DOMParser().parseFromString(
+      `<div id="root">${normalized}</div>`,
+      'text/html',
+    );
+    const root = doc.getElementById('root');
+    const embedBlock = root?.querySelector('span.embed-block');
+    const hiddenFallback = root?.querySelector('a[style*="display:none"]');
+
+    expect(embedBlock).not.toBeNull();
+    expect(embedBlock?.getAttribute('data-zenn-embed-source')).toBe(
+      '@[card](https://zenn.dev/zenn/articles/markdown-guide)',
+    );
+    expect(hiddenFallback).toBeNull();
+  });
 });

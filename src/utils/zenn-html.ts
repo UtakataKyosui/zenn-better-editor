@@ -21,6 +21,8 @@ type FencedBlock = {
   content: string;
 };
 
+const EMBED_ONLY_LINE_PATTERN = /^(@\[[\w-]+\]\(.+\)|https?:\/\/\S+)$/gim;
+
 const extractFencedBlocks = (markdown: string): FencedBlock[] => {
   const blocks: FencedBlock[] = [];
   const pattern = /^```([^\r\n]*)[\t ]*\r?\n([\s\S]*?)^```[\t ]*$/gm;
@@ -34,6 +36,42 @@ const extractFencedBlocks = (markdown: string): FencedBlock[] => {
   }
 
   return blocks;
+};
+
+const extractEmbedSourceLines = (markdown: string) => {
+  const matches = markdown.match(EMBED_ONLY_LINE_PATTERN);
+  return (matches || []).map((line) => line.trim());
+};
+
+const annotateEmbedSources = (root: HTMLElement, markdown: string) => {
+  const sources = extractEmbedSourceLines(markdown);
+  if (sources.length === 0) return;
+
+  const blocks = Array.from(
+    root.querySelectorAll('span.embed-block:not(.zenn-embedded-mermaid)'),
+  );
+  if (blocks.length === 0) return;
+
+  blocks.forEach((block, index) => {
+    const source = sources[index];
+    if (!source) return;
+    block.setAttribute('data-zenn-embed-source', source);
+  });
+};
+
+const removeEmbedFallbackLinks = (root: HTMLElement) => {
+  const hiddenLinks = Array.from(
+    root.querySelectorAll('a[style*="display:none"]'),
+  );
+
+  hiddenLinks.forEach((link) => {
+    const parent = link.parentElement;
+    if (!parent) return;
+
+    if (parent.querySelector('span.embed-block')) {
+      link.remove();
+    }
+  });
 };
 
 const injectCodeLanguages = (root: HTMLElement, markdown: string) => {
@@ -173,6 +211,8 @@ export const normalizeZennHtmlForTiptap = (
 
     flattenShikiCodeToPlainText(root);
     convertMermaidEmbedsToCodeBlocks(root);
+    annotateEmbedSources(root, markdown);
+    removeEmbedFallbackLinks(root);
     injectCodeLanguages(root, markdown);
     convertZennMathNodes(root);
 

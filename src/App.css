@@ -516,6 +516,16 @@ button {
   overflow-x: auto;
 }
 
+.source-editor--wysiwyg .embed-block {
+  display: block;
+  margin: 1rem 0;
+}
+
+.source-editor--wysiwyg .embed-block iframe {
+  width: 100%;
+  border: 0;
+}
+
 .source-editor--wysiwyg .tiptap-mermaid-preview {
   margin: 0.8rem 0 1.4rem;
   border: 1px solid rgba(148, 163, 184, 0.22);

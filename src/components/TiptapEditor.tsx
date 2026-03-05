@@ -7,6 +7,7 @@ import {
   MermaidPreview,
   type MermaidEditPayload,
 } from '../tiptap/extensions/mermaid-preview';
+import { ZennEmbedBlock } from '../tiptap/extensions/zenn-embeds';
 import { ZennDetails, ZennMessage } from '../tiptap/extensions/zenn-nodes';
 import { ZennShikiCodeHighlight } from '../tiptap/extensions/shiki-code-highlight';
 import { normalizeZennHtmlForTiptap } from '../utils/zenn-html';
@@ -65,6 +66,7 @@ export const TiptapEditor = ({
       } as any),
       ZennMessage,
       ZennDetails,
+      ZennEmbedBlock,
       ZennShikiCodeHighlight.configure({
         theme: 'github-dark',
         defaultLanguage: 'text',
@@ -85,9 +87,7 @@ export const TiptapEditor = ({
     },
     onUpdate: ({ editor }) => {
       isUpdatingRef.current = true;
-      // biome-ignore lint/suspicious/noExplicitAny: Tiptap types might be incomplete
-      const updatedMarkdown =
-        (editor.storage.markdown as any)?.getMarkdown?.() || '';
+      const updatedMarkdown = editor.getMarkdown();
       onChange(updatedMarkdown);
 
       setTimeout(() => {
@@ -146,9 +146,7 @@ export const TiptapEditor = ({
       return;
     }
 
-    // biome-ignore lint/suspicious/noExplicitAny: Tiptap types might be incomplete
-    const currentMarkdown =
-      (editor.storage.markdown as any)?.getMarkdown?.() || '';
+    const currentMarkdown = editor.getMarkdown();
     if (currentMarkdown !== markdown) {
       if (normalizedInitialHtml) {
         editor.commands.setContent(normalizedInitialHtml);
@@ -158,6 +156,17 @@ export const TiptapEditor = ({
       editor.commands.setContent(markdown, { contentType: 'markdown' });
     }
   }, [markdown, normalizedInitialHtml, editor]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (
+      typeof navigator !== 'undefined' &&
+      navigator.userAgent.includes('HappyDOM')
+    ) {
+      return;
+    }
+    void import('zenn-embed-elements');
+  }, []);
 
   const applyMermaidChanges = useCallback(() => {
     if (!editor || !mermaidModal) return;

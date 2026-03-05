@@ -265,3 +265,26 @@ test('keeps mermaid preview for init directive blocks without an explicit langua
     { timeout: 5000 },
   );
 });
+
+test('renders zenn embed blocks inside wysiwyg editor', async () => {
+  const markdown = '@[card](https://zenn.dev/zenn/articles/markdown-guide)\n';
+  const initialHtml =
+    '<p><span class="embed-block zenn-embedded zenn-embedded-card" data-zenn-embed-source="@[card](https://zenn.dev/zenn/articles/markdown-guide)"><iframe id="zenn-embedded__card" data-content="https%3A%2F%2Fzenn.dev%2Fzenn%2Farticles%2Fmarkdown-guide"></iframe></span></p>';
+
+  const { container } = render(
+    <TiptapEditor
+      markdown={markdown}
+      initialHtml={initialHtml}
+      onChange={() => {}}
+      className="source-editor source-editor--fused source-editor--wysiwyg znc"
+      ariaLabel="WYSIWYG body"
+    />,
+  );
+
+  await waitFor(
+    () => {
+      expect(container.querySelector('.embed-block iframe')).not.toBeNull();
+    },
+    { timeout: 5000 },
+  );
+});
