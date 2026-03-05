@@ -1,5 +1,9 @@
 import { Markdown } from '@tiptap/markdown';
 import { Mathematics } from '@tiptap/extension-mathematics';
+import { Table } from '@tiptap/extension-table';
+import { TableCell } from '@tiptap/extension-table-cell';
+import { TableHeader } from '@tiptap/extension-table-header';
+import { TableRow } from '@tiptap/extension-table-row';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -64,6 +68,13 @@ export const TiptapEditor = ({
         html: true,
         // biome-ignore lint/suspicious/noExplicitAny: Extending internal options
       } as any),
+      Table.configure({
+        resizable: false,
+        allowTableNodeSelection: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
       ZennMessage,
       ZennDetails,
       ZennEmbedBlock,

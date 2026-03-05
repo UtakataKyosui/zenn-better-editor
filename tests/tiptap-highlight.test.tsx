@@ -67,6 +67,37 @@ test('keeps multi-line diff code blocks as multiple lines', async () => {
   );
 });
 
+test('renders markdown tables as table elements in wysiwyg', async () => {
+  const markdown = [
+    '| Head | Head | Head |',
+    '| ---- | ---- | ---- |',
+    '| Text | Text | Text |',
+    '| Text | Text | Text |',
+    '',
+  ].join('\n');
+  const initialHtml = await markdownToHtml(markdown);
+
+  const { container } = render(
+    <TiptapEditor
+      markdown={markdown}
+      initialHtml={initialHtml}
+      onChange={() => {}}
+      className="source-editor source-editor--fused source-editor--wysiwyg znc"
+      ariaLabel="WYSIWYG body"
+    />,
+  );
+
+  await waitFor(
+    () => {
+      const table = container.querySelector('table');
+      expect(table).not.toBeNull();
+      expect(table?.querySelectorAll('th').length).toBe(3);
+      expect(table?.querySelectorAll('td').length).toBe(6);
+    },
+    { timeout: 5000 },
+  );
+});
+
 test('shows mermaid preview widget for mermaid code blocks', async () => {
   const markdown = ['```mermaid', 'graph TD', 'A-->B', '```', ''].join('\n');
   const initialHtml = await markdownToHtml(markdown);
