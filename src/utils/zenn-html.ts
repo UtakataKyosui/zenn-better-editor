@@ -17,11 +17,52 @@ const normalizeCodeContent = (value: string) => {
 };
 
 type FencedBlock = {
+  fenceInfo: string;
   language: string;
+  filename: string;
   content: string;
 };
 
 const EMBED_ONLY_LINE_PATTERN = /^(@\[[\w-]+\]\(.+\)|https?:\/\/\S+)$/gim;
+
+const parseFenceMetadata = (fenceInfo: string) => {
+  const compact = fenceInfo.trim();
+  if (!compact) {
+    return {
+      language: '',
+      filename: '',
+      fenceInfo: '',
+    };
+  }
+
+  const tokens = compact.split(/\s+/);
+  const first = tokens[0] || '';
+
+  if (first === 'diff') {
+    const secondary = tokens[1] || '';
+    const separatorIndex = secondary.indexOf(':');
+    return {
+      language: 'diff',
+      filename: separatorIndex > 0 ? secondary.slice(separatorIndex + 1).trim() : '',
+      fenceInfo: compact,
+    };
+  }
+
+  const separatorIndex = first.indexOf(':');
+  if (separatorIndex > 0) {
+    return {
+      language: first.slice(0, separatorIndex).trim(),
+      filename: first.slice(separatorIndex + 1).trim(),
+      fenceInfo: compact,
+    };
+  }
+
+  return {
+    language: first,
+    filename: '',
+    fenceInfo: compact,
+  };
+};
 
 const extractFencedBlocks = (markdown: string): FencedBlock[] => {
   const blocks: FencedBlock[] = [];
@@ -29,9 +70,15 @@ const extractFencedBlocks = (markdown: string): FencedBlock[] => {
   let match = pattern.exec(markdown);
 
   while (match) {
-    const language = parseFenceLanguage(match[1]);
+    const metadata = parseFenceMetadata(match[1] || '');
+    const language = metadata.language || parseFenceLanguage(match[1]);
     const content = normalizeCodeContent(match[2] || '');
-    blocks.push({ language, content });
+    blocks.push({
+      fenceInfo: metadata.fenceInfo,
+      language,
+      filename: metadata.filename,
+      content,
+    });
     match = pattern.exec(markdown);
   }
 
@@ -104,8 +151,18 @@ const injectCodeLanguages = (root: HTMLElement, markdown: string) => {
     usedBlockIndexes.add(blockIndex);
 
     const language = block.language;
-    if (!language) return;
-    codeNode.classList.add(`language-${language}`);
+    if (language) {
+      codeNode.classList.add(`language-${language}`);
+    }
+
+    const preNode = codeNode.closest('pre');
+    if (!preNode) return;
+    if (block.fenceInfo) {
+      preNode.setAttribute('data-zenn-fence-info', block.fenceInfo);
+    }
+    if (block.filename) {
+      preNode.setAttribute('data-zenn-filename', block.filename);
+    }
   });
 };
 
@@ -192,6 +249,16 @@ const convertZennMathNodes = (root: HTMLElement) => {
   });
 };
 
+const normalizeImageLoading = (root: HTMLElement) => {
+  const images = Array.from(root.querySelectorAll('img.md-img'));
+  images.forEach((image) => {
+    // Native lazy-loading can miss updates inside nested editable scrollers.
+    // Force eager loading in the editor surface so previews appear reliably.
+    image.setAttribute('loading', 'eager');
+    image.setAttribute('decoding', 'async');
+  });
+};
+
 export const normalizeZennHtmlForTiptap = (
   html: string,
   markdown = '',
@@ -215,6 +282,7 @@ export const normalizeZennHtmlForTiptap = (
     removeEmbedFallbackLinks(root);
     injectCodeLanguages(root, markdown);
     convertZennMathNodes(root);
+    normalizeImageLoading(root);
 
     return root.innerHTML;
   } catch {

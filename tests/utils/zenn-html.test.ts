@@ -72,4 +72,20 @@ describe('zenn html normalization', () => {
     );
     expect(hiddenFallback).toBeNull();
   });
+
+  it('forces eager loading for markdown images in the editor html', async () => {
+    const markdown =
+      '![](https://storage.googleapis.com/zenn-user-upload/topics/a0d4d7f86a.jpeg)\n';
+    const html = await markdownToHtml(markdown);
+    const normalized = normalizeZennHtmlForTiptap(html, markdown);
+    const doc = new DOMParser().parseFromString(
+      `<div id="root">${normalized}</div>`,
+      'text/html',
+    );
+    const image = doc.querySelector('img.md-img');
+
+    expect(image).not.toBeNull();
+    expect(image?.getAttribute('loading')).toBe('eager');
+    expect(image?.getAttribute('decoding')).toBe('async');
+  });
 });

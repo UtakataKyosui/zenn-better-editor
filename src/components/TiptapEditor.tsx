@@ -11,7 +11,9 @@ import {
   MermaidPreview,
   type MermaidEditPayload,
 } from '../tiptap/extensions/mermaid-preview';
+import { ZennCodeBlock } from '../tiptap/extensions/zenn-code-block';
 import { ZennEmbedBlock } from '../tiptap/extensions/zenn-embeds';
+import { ZennImage } from '../tiptap/extensions/zenn-image';
 import { ZennDetails, ZennMessage } from '../tiptap/extensions/zenn-nodes';
 import { ZennShikiCodeHighlight } from '../tiptap/extensions/shiki-code-highlight';
 import { normalizeZennHtmlForTiptap } from '../utils/zenn-html';
@@ -55,9 +57,8 @@ export const TiptapEditor = ({
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        codeBlock: {
-          defaultLanguage: 'text',
-        },
+        // Use custom extension to preserve Zenn filename metadata in code blocks.
+        codeBlock: false,
       }),
       Mathematics.configure({
         katexOptions: {
@@ -78,6 +79,10 @@ export const TiptapEditor = ({
       TableCell,
       ZennMessage,
       ZennDetails,
+      ZennCodeBlock.configure({
+        defaultLanguage: 'text',
+      }),
+      ZennImage,
       ZennEmbedBlock,
       ZennShikiCodeHighlight.configure({
         theme: 'github-dark',
@@ -127,7 +132,7 @@ export const TiptapEditor = ({
   useEffect(() => {
     if (!editor || hasInitializedRef.current) return;
     if (normalizedInitialHtml) {
-      editor.commands.setContent(normalizedInitialHtml);
+      editor.commands.setContent(normalizedInitialHtml, { emitUpdate: false });
       hasInitializedRef.current = true;
     }
   }, [editor, normalizedInitialHtml]);
@@ -152,7 +157,7 @@ export const TiptapEditor = ({
     if (!hasInitializedRef.current) {
       // Avoid parsing custom Zenn directives as plain text during first mount.
       if (normalizedInitialHtml) {
-        editor.commands.setContent(normalizedInitialHtml);
+        editor.commands.setContent(normalizedInitialHtml, { emitUpdate: false });
         hasInitializedRef.current = true;
       }
       return;
@@ -161,11 +166,14 @@ export const TiptapEditor = ({
     const currentMarkdown = editor.getMarkdown();
     if (currentMarkdown !== markdown) {
       if (normalizedInitialHtml) {
-        editor.commands.setContent(normalizedInitialHtml);
+        editor.commands.setContent(normalizedInitialHtml, { emitUpdate: false });
         return;
       }
 
-      editor.commands.setContent(markdown, { contentType: 'markdown' });
+      editor.commands.setContent(markdown, {
+        contentType: 'markdown',
+        emitUpdate: false,
+      });
     }
   }, [markdown, normalizedInitialHtml, editor]);
 

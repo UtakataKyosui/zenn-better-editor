@@ -7,6 +7,7 @@ type HybridSurfaceProps = {
   frontmatter: string;
   body: string;
   renderedHtml: string;
+  isInitialHtmlReady: boolean;
   isSeamless: boolean;
   onChangeFrontmatter: (value: string) => void;
   onChangeBody: (value: string) => void;
@@ -17,6 +18,7 @@ export const HybridSurface = ({
   frontmatter,
   body,
   renderedHtml,
+  isInitialHtmlReady,
   isSeamless,
   onChangeFrontmatter,
   onChangeBody,
@@ -78,14 +80,20 @@ export const HybridSurface = ({
                 <label className="source-label" htmlFor="markdown-editor">
                   {editorLabel}
                 </label>
-                <TiptapEditor
-                  id="markdown-editor"
-                  className={editorClassName}
-                  ariaLabel={editorLabel}
-                  markdown={body}
-                  initialHtml={renderedHtml}
-                  onChange={onChangeBody}
-                />
+                {isInitialHtmlReady ? (
+                  <TiptapEditor
+                    id="markdown-editor"
+                    className={editorClassName}
+                    ariaLabel={editorLabel}
+                    markdown={body}
+                    initialHtml={renderedHtml}
+                    onChange={onChangeBody}
+                  />
+                ) : (
+                  <div className="editor-loading" aria-live="polite">
+                    Preparing WYSIWYG preview...
+                  </div>
+                )}
               </section>
             </div>
 

@@ -495,21 +495,6 @@ button {
     sans-serif;
 }
 
-.source-editor--wysiwyg pre {
-  background: #151e2c;
-  color: #e1e4e8;
-  border-radius: 10px;
-  padding: 14px 16px;
-  overflow-x: auto;
-}
-
-.source-editor--wysiwyg pre code {
-  font-family:
-    'IBM Plex Mono',
-    'JetBrains Mono',
-    monospace;
-}
-
 .source-editor--wysiwyg .tiptap-mathematics-render[data-type='block-math'] {
   display: block;
   margin: 1.1rem 0;
@@ -660,6 +645,17 @@ button {
 .source-editor--frontmatter {
   min-height: 180px;
   margin-bottom: 20px;
+}
+
+.editor-loading {
+  min-height: 420px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 16px;
+  background: #fff;
+  color: #475569;
+  display: grid;
+  place-items: center;
+  font-size: 0.95rem;
 }
 
 .seamless-tiptap-editor {

@@ -6,7 +6,8 @@
   "scripts": {
     "build": "rsbuild build",
     "check": "biome check --write",
-    "dev": "rsbuild dev --open",
+    "dev": "rsbuild dev",
+    "dev:open": "rsbuild dev --open",
     "format": "biome format --write",
     "preview": "rsbuild preview",
     "test": "rstest",
@@ -14,6 +15,8 @@
   },
   "dependencies": {
     "@tiptap/core": "^3.20.0",
+    "@tiptap/extension-code-block": "^3.20.0",
+    "@tiptap/extension-image": "^3.20.0",
     "@tiptap/extension-mathematics": "^3.20.0",
     "@tiptap/extension-table": "^3.20.0",
     "@tiptap/extension-table-cell": "^3.20.0",

@@ -37,16 +37,16 @@ published: false
 
 ## 画像
 
-![](https://storage.googleapis.com/zenn-user-upload/topics/a0d4d7f86a.jpeg)
+![](https://devio2023-media.developers.io/wp-content/uploads/2018/02/rust-logo-blk.png)
 
-![](https://storage.googleapis.com/zenn-user-upload/topics/a0d4d7f86a.jpeg =240x)
+![](/zenn-sample-forest.svg =240x)
 
-![Altテキスト付き画像](https://storage.googleapis.com/zenn-user-upload/topics/6d4f5d69fd.jpeg)
+![Altテキスト付き画像](/zenn-sample-ocean.svg)
 
-![](https://storage.googleapis.com/zenn-user-upload/topics/6d4f5d69fd.jpeg)
+![](/zenn-sample-ocean.svg)
 *画像キャプションの例*
 
-[![](https://storage.googleapis.com/zenn-user-upload/topics/a0d4d7f86a.jpeg =180x)](https://zenn.dev)
+[![](/zenn-sample-forest.svg =180x)](https://zenn.dev)
 
 ## テーブル
 

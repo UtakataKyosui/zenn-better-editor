@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Sample forest image">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f766e"/>
+      <stop offset="100%" stop-color="#14532d"/>
+    </linearGradient>
+    <linearGradient id="sun" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fde047"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="980" cy="120" r="72" fill="url(#sun)" opacity="0.9"/>
+  <polygon points="120,560 330,220 540,560" fill="#064e3b" opacity="0.9"/>
+  <polygon points="420,560 650,180 880,560" fill="#065f46" opacity="0.88"/>
+  <polygon points="760,560 980,260 1140,560" fill="#047857" opacity="0.82"/>
+  <rect x="0" y="560" width="1200" height="70" fill="#052e16" opacity="0.82"/>
+  <text x="80" y="108" fill="#ecfeff" font-size="54" font-family="IBM Plex Sans, Arial, sans-serif" font-weight="700">
+    Rich Zenn Editor Sample
+  </text>
+  <text x="80" y="158" fill="#d1fae5" font-size="28" font-family="IBM Plex Sans, Arial, sans-serif">
+    Local image asset for stable preview rendering
+  </text>
+</svg>

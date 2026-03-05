@@ -60,14 +60,19 @@ const Tiptap = () => {
     () => splitMarkdownParts(initialMarkdown),
     [initialMarkdown],
   );
+  const shouldDeferInitialRender = shouldUseExternalEmbedOrigin();
   const [frontmatter, setFrontmatter] = useState(initialParts.frontmatter);
   const [body, setBody] = useState(initialParts.body);
   const [renderedHtml, setRenderedHtml] = useState('');
+  const [isInitialHtmlReady, setIsInitialHtmlReady] = useState(
+    !shouldDeferInitialRender,
+  );
   const [documentName, setDocumentName] = useState('untitled.md');
   const [saveStatus, setSaveStatus] = useState('Live markdown editing');
   const [isSeamless, setIsSeamless] = useState(true);
   const fileHandleRef = useRef<FileSystemFileHandle | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const hasInitialHtmlResolvedRef = useRef(!shouldDeferInitialRender);
 
   const markdown = useMemo(() => {
     return mergeMarkdownParts({ frontmatter, body });
@@ -149,11 +154,19 @@ const Tiptap = () => {
       .then((html) => {
         if (!cancelled) {
           setRenderedHtml(html);
+          if (!hasInitialHtmlResolvedRef.current) {
+            hasInitialHtmlResolvedRef.current = true;
+            setIsInitialHtmlReady(true);
+          }
         }
       })
       .catch(() => {
         if (!cancelled) {
           setRenderedHtml('');
+          if (!hasInitialHtmlResolvedRef.current) {
+            hasInitialHtmlResolvedRef.current = true;
+            setIsInitialHtmlReady(true);
+          }
         }
       });
 
@@ -331,6 +344,7 @@ const Tiptap = () => {
         frontmatter={frontmatter}
         body={body}
         renderedHtml={renderedHtml}
+        isInitialHtmlReady={isInitialHtmlReady}
         isSeamless={isSeamless}
         onToggleSeamless={() => setIsSeamless((prev) => !prev)}
         onChangeFrontmatter={(val) => {
