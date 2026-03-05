@@ -13,6 +13,10 @@ import {
 } from '../tiptap/extensions/mermaid-preview';
 import { ZennCodeBlock } from '../tiptap/extensions/zenn-code-block';
 import { ZennEmbedBlock } from '../tiptap/extensions/zenn-embeds';
+import {
+  ZennFootnoteReference,
+  ZennFootnotesSection,
+} from '../tiptap/extensions/zenn-footnotes';
 import { ZennImage } from '../tiptap/extensions/zenn-image';
 import { ZennDetails, ZennMessage } from '../tiptap/extensions/zenn-nodes';
 import { ZennShikiCodeHighlight } from '../tiptap/extensions/shiki-code-highlight';
@@ -26,6 +30,10 @@ import {
   ZENN_IMAGE_CONVERSION_META_KEY,
   convertTypedZennImages,
 } from '../utils/zenn-image-transform';
+import {
+  ZENN_FOOTNOTE_CONVERSION_META_KEY,
+  convertTypedZennFootnotes,
+} from '../utils/zenn-footnote-transform';
 
 type TiptapEditorProps = {
   markdown: string;
@@ -87,6 +95,8 @@ export const TiptapEditor = ({
       TableCell,
       ZennMessage,
       ZennDetails,
+      ZennFootnoteReference,
+      ZennFootnotesSection,
       ZennCodeBlock.configure({
         defaultLanguage: 'text',
       }),
@@ -119,6 +129,12 @@ export const TiptapEditor = ({
       }
       if (!transaction.getMeta(ZENN_IMAGE_CONVERSION_META_KEY)) {
         const converted = convertTypedZennImages(editor);
+        if (converted) {
+          return;
+        }
+      }
+      if (!transaction.getMeta(ZENN_FOOTNOTE_CONVERSION_META_KEY)) {
+        const converted = convertTypedZennFootnotes(editor);
         if (converted) {
           return;
         }

@@ -569,3 +569,42 @@ test('toggles zenn details by clicking summary in wysiwyg', async () => {
     expect(details?.hasAttribute('open')).toBe(false);
   });
 });
+
+test('allows editing footnote content from the rendered footnotes section', async () => {
+  const markdown = ['脚注の参照[^note]', '', '[^note]: 初期脚注', ''].join('\n');
+  const initialHtml = await markdownToHtml(markdown);
+  const changes: string[] = [];
+
+  const { container } = render(
+    <TiptapEditor
+      markdown={markdown}
+      initialHtml={initialHtml}
+      onChange={(next) => changes.push(next)}
+      className="source-editor source-editor--fused source-editor--wysiwyg znc"
+      ariaLabel="WYSIWYG body"
+    />,
+  );
+
+  const textarea = (await waitFor(
+    () => {
+      const element = container.querySelector(
+        '.tiptap-footnote-input',
+      ) as HTMLTextAreaElement | null;
+      expect(element).not.toBeNull();
+      return element;
+    },
+    { timeout: 5000 },
+  )) as HTMLTextAreaElement;
+
+  fireEvent.input(textarea, { target: { value: '更新した脚注' } });
+  expect(textarea.value).toBe('更新した脚注');
+  fireEvent.blur(textarea);
+
+  await waitFor(
+    () => {
+      expect(changes.length).toBeGreaterThan(0);
+      expect(changes.at(-1)).toContain('更新した脚注');
+    },
+    { timeout: 5000 },
+  );
+});

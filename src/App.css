@@ -567,6 +567,28 @@ button {
   font-size: 0.9rem;
 }
 
+.source-editor--wysiwyg .tiptap-footnotes-editor {
+  margin-top: 2.4rem;
+}
+
+.source-editor--wysiwyg .tiptap-footnote-label {
+  color: #475569;
+  font-weight: 600;
+}
+
+.source-editor--wysiwyg .tiptap-footnote-input {
+  width: min(100%, 560px);
+  min-height: 34px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 8px;
+  padding: 5px 8px;
+  background: #fff;
+  color: #0f172a;
+  line-height: 1.6;
+  resize: vertical;
+  vertical-align: middle;
+}
+
 .tiptap-mermaid-modal-backdrop {
   position: fixed;
   inset: 0;
