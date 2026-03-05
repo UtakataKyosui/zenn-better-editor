@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @plugin "@tailwindcss/typography";
 @import 'zenn-content-css/lib/index.css';
+@import 'katex/dist/katex.min.css';
 
 :root {
   color: #e8ecf3;
@@ -492,6 +493,27 @@ button {
     'IBM Plex Sans',
     'Noto Sans JP',
     sans-serif;
+}
+
+.source-editor--wysiwyg pre {
+  background: #151e2c;
+  color: #e1e4e8;
+  border-radius: 10px;
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+
+.source-editor--wysiwyg pre code {
+  font-family:
+    'IBM Plex Mono',
+    'JetBrains Mono',
+    monospace;
+}
+
+.source-editor--wysiwyg .tiptap-mathematics-render[data-type='block-math'] {
+  display: block;
+  margin: 1.1rem 0;
+  overflow-x: auto;
 }
 
 .source-editor--wysiwyg:focus {

@@ -1,8 +1,11 @@
 import { Markdown } from '@tiptap/markdown';
+import { Mathematics } from '@tiptap/extension-mathematics';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { ZennDetails, ZennMessage } from '../tiptap/extensions/zenn-nodes';
+import { ZennShikiCodeHighlight } from '../tiptap/extensions/shiki-code-highlight';
+import { normalizeZennHtmlForTiptap } from '../utils/zenn-html';
 
 type TiptapEditorProps = {
   markdown: string;
@@ -26,20 +29,38 @@ export const TiptapEditor = ({
 }: TiptapEditorProps) => {
   const isUpdatingRef = useRef(false);
   const hasInitializedRef = useRef(false);
+  const normalizedInitialHtml = useMemo(
+    () => normalizeZennHtmlForTiptap(initialHtml || '', markdown),
+    [initialHtml, markdown],
+  );
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        codeBlock: {
+          defaultLanguage: 'text',
+        },
+      }),
+      Mathematics.configure({
+        katexOptions: {
+          throwOnError: false,
+          strict: 'ignore',
+        },
+      }),
       Markdown.configure({
         html: true,
         // biome-ignore lint/suspicious/noExplicitAny: Extending internal options
       } as any),
       ZennMessage,
       ZennDetails,
+      ZennShikiCodeHighlight.configure({
+        theme: 'github-dark',
+        defaultLanguage: 'text',
+      }),
     ],
     // Start with pre-rendered HTML so Zenn-specific blocks are parsed
     // by our custom node extensions via parseHTML rules
-    content: initialHtml || '',
+    content: normalizedInitialHtml || '',
     editorProps: {
       attributes: {
         class: className || '',
@@ -63,11 +84,11 @@ export const TiptapEditor = ({
   // When the editor is created and initialHtml is available, set it once
   useEffect(() => {
     if (!editor || hasInitializedRef.current) return;
-    if (initialHtml) {
-      editor.commands.setContent(initialHtml);
+    if (normalizedInitialHtml) {
+      editor.commands.setContent(normalizedInitialHtml);
       hasInitializedRef.current = true;
     }
-  }, [editor, initialHtml]);
+  }, [editor, normalizedInitialHtml]);
 
   useEffect(() => {
     if (!editor) return;
@@ -88,8 +109,8 @@ export const TiptapEditor = ({
 
     if (!hasInitializedRef.current) {
       // Avoid parsing custom Zenn directives as plain text during first mount.
-      if (initialHtml) {
-        editor.commands.setContent(initialHtml);
+      if (normalizedInitialHtml) {
+        editor.commands.setContent(normalizedInitialHtml);
         hasInitializedRef.current = true;
       }
       return;
@@ -99,14 +120,14 @@ export const TiptapEditor = ({
     const currentMarkdown =
       (editor.storage.markdown as any)?.getMarkdown?.() || '';
     if (currentMarkdown !== markdown) {
-      if (initialHtml) {
-        editor.commands.setContent(initialHtml);
+      if (normalizedInitialHtml) {
+        editor.commands.setContent(normalizedInitialHtml);
         return;
       }
 
       editor.commands.setContent(markdown, { contentType: 'markdown' });
     }
-  }, [markdown, initialHtml, editor]);
+  }, [markdown, normalizedInitialHtml, editor]);
 
   return (
     <div

@@ -6,4 +6,9 @@ export default defineConfig({
   plugins: [pluginReact()],
   testEnvironment: 'happy-dom',
   setupFiles: ['./tests/rstest.setup.ts'],
+  resolve: {
+    alias: {
+      katex: 'katex/dist/katex.js',
+    },
+  },
 });
