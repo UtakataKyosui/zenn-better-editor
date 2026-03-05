@@ -75,6 +75,28 @@ const decodeEmbedPayload = (value: string) => {
   }
 };
 
+const EMBED_LINE_PATTERN =
+  /^(?:@\[([\w-]+)\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/\S+))[ \t]*(?:\n|$)/;
+
+const getEmbedSourcePayload = (source: string) => {
+  const trimmed = source.trim();
+  const explicit = trimmed.match(/^@\[[\w-]+\]\((.+)\)$/);
+  if (explicit) {
+    return explicit[1].trim();
+  }
+  return trimmed;
+};
+
+const getEmbedKind = (source: string) => {
+  const explicit = source.trim().match(/^@\[([\w-]+)\]\(.+\)$/);
+  return (explicit?.[1] || 'card').toLowerCase();
+};
+
+const buildEmbedClassName = (kind: string) =>
+  `embed-block zenn-embedded zenn-embedded-${kind}`;
+
+const buildEmbedIframeId = (kind: string) => `zenn-embedded__${kind}`;
+
 export const ZennEmbedBlock = Node.create({
   name: 'zennEmbedBlock',
   group: 'inline',
@@ -148,6 +170,74 @@ export const ZennEmbedBlock = Node.create({
 
   parseHTML() {
     return [{ tag: 'span.embed-block' }];
+  },
+
+  markdownTokenizer: {
+    name: 'zennEmbedBlock',
+    level: 'block',
+    start: (src: string) => {
+      const explicitIndex = src.indexOf('@[');
+      const urlMatch = src.match(/https?:\/\//);
+      const urlIndex =
+        typeof urlMatch?.index === 'number' ? urlMatch.index : Number.POSITIVE_INFINITY;
+
+      if (explicitIndex < 0 && !Number.isFinite(urlIndex)) {
+        return -1;
+      }
+
+      if (explicitIndex < 0) {
+        return urlIndex;
+      }
+
+      return Math.min(explicitIndex, urlIndex);
+    },
+    // biome-ignore lint/suspicious/noExplicitAny: Markdown token type from parser
+    tokenize: (src: string) => {
+      const match = src.match(EMBED_LINE_PATTERN);
+      if (!match) return undefined;
+
+      const source = match[0].trim();
+      const kind = getEmbedKind(source);
+      const payload = getEmbedSourcePayload(source);
+
+      return {
+        type: 'zennEmbedBlock',
+        raw: match[0],
+        attributes: {
+          source,
+          className: buildEmbedClassName(kind),
+          iframeId: buildEmbedIframeId(kind),
+          iframeDataContent: encodeURIComponent(payload),
+        },
+      };
+    },
+  },
+
+  // biome-ignore lint/suspicious/noExplicitAny: Markdown token/helper types are dynamic
+  parseMarkdown: (token: any, helpers: any) => {
+    const source = String(token.attributes?.source || '').trim();
+    const kind = getEmbedKind(source);
+    const payload = getEmbedSourcePayload(source);
+
+    return helpers.createNode(
+      'zennEmbedBlock',
+      {
+        className: token.attributes?.className || buildEmbedClassName(kind),
+        source,
+        iframeSrc: '',
+        iframeId: token.attributes?.iframeId || buildEmbedIframeId(kind),
+        iframeDataContent:
+          token.attributes?.iframeDataContent || encodeURIComponent(payload),
+        iframeWidth: '100%',
+        iframeStyle: '',
+        iframeScrolling: 'no',
+        iframeFrameborder: '0',
+        iframeLoading: 'lazy',
+        iframeAllow: '',
+        iframeAllowfullscreen: '',
+      },
+      [],
+    );
   },
 
   renderHTML({ HTMLAttributes }) {

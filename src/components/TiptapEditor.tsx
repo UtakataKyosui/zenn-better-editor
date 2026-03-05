@@ -18,6 +18,10 @@ import { ZennDetails, ZennMessage } from '../tiptap/extensions/zenn-nodes';
 import { ZennShikiCodeHighlight } from '../tiptap/extensions/shiki-code-highlight';
 import { normalizeZennHtmlForTiptap } from '../utils/zenn-html';
 import { bootZennEmbedRuntime } from '../utils/zenn-embed-runtime';
+import {
+  ZENN_CONTAINER_CONVERSION_META_KEY,
+  convertTypedZennContainers,
+} from '../utils/zenn-container-transform';
 
 type TiptapEditorProps = {
   markdown: string;
@@ -102,7 +106,14 @@ export const TiptapEditor = ({
         'aria-label': ariaLabel || 'Markdown body',
       },
     },
-    onUpdate: ({ editor }) => {
+    onUpdate: ({ editor, transaction }) => {
+      if (!transaction.getMeta(ZENN_CONTAINER_CONVERSION_META_KEY)) {
+        const converted = convertTypedZennContainers(editor);
+        if (converted) {
+          return;
+        }
+      }
+
       isUpdatingRef.current = true;
       const updatedMarkdown = editor.getMarkdown();
       onChange(updatedMarkdown);
