@@ -3,6 +3,7 @@ import {
   countWords,
   mergeMarkdownParts,
   splitMarkdownParts,
+  stripLeadingFrontmatter,
 } from '../../src/utils/markdown';
 
 describe('markdown utils', () => {
@@ -34,6 +35,18 @@ describe('markdown utils', () => {
     it('ignores empty frontmatter', () => {
       const result = mergeMarkdownParts({ frontmatter: '', body: 'body here' });
       expect(result).toBe('body here');
+    });
+  });
+
+  describe('stripLeadingFrontmatter', () => {
+    it('removes leading frontmatter from body text', () => {
+      const input = `---\ntitle: "pasted"\n---\n\nbody here`;
+      expect(stripLeadingFrontmatter(input)).toBe('body here');
+    });
+
+    it('keeps text unchanged when no frontmatter exists', () => {
+      const input = '# heading\n\nbody here';
+      expect(stripLeadingFrontmatter(input)).toBe(input);
     });
   });
 

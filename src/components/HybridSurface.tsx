@@ -29,7 +29,21 @@ export const HybridSurface = ({
 
   return (
     <section className="workspace-grid">
-      <section className="panel">
+      <section className="panel panel--yaml" aria-label="YAML section">
+        <header className="panel-header">
+          <div>
+            <p className="panel-label">Metadata</p>
+            <h2>YAML frontmatter</h2>
+          </div>
+        </header>
+
+        <FrontmatterEditor
+          frontmatter={frontmatter}
+          onChange={onChangeFrontmatter}
+        />
+      </section>
+
+      <section className="panel panel--editor" aria-label="Body section">
         <header className="panel-header">
           <div className="panel-header">
             <div>
@@ -51,22 +65,19 @@ export const HybridSurface = ({
         <div className="editor-surface editor-surface--visual">
           <div className={`hybrid-surface ${isSeamless ? 'is-seamless' : ''}`}>
             <div className="hybrid-surface__input">
-              <FrontmatterEditor
-                frontmatter={frontmatter}
-                onChange={onChangeFrontmatter}
-              />
-
-              <label className="source-label" htmlFor="markdown-editor">
-                {editorLabel}
-              </label>
-              <TiptapEditor
-                id="markdown-editor"
-                className={editorClassName}
-                ariaLabel={editorLabel}
-                markdown={body}
-                initialHtml={renderedHtml}
-                onChange={onChangeBody}
-              />
+              <section className="editor-block editor-block--body">
+                <label className="source-label" htmlFor="markdown-editor">
+                  {editorLabel}
+                </label>
+                <TiptapEditor
+                  id="markdown-editor"
+                  className={editorClassName}
+                  ariaLabel={editorLabel}
+                  markdown={body}
+                  initialHtml={renderedHtml}
+                  onChange={onChangeBody}
+                />
+              </section>
             </div>
 
             {/* Divider only in split view */}

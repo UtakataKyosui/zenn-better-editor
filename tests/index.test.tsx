@@ -27,9 +27,12 @@ test('renders the markdown-first workspace', async () => {
   // Frontmatter fields are now structured widgets, not a single textarea
   expect(screen.getByLabelText('Title')).toBeInTheDocument();
   expect(screen.getByLabelText('Emoji')).toBeInTheDocument();
+  expect(screen.getByText('YAML frontmatter')).toBeInTheDocument();
+  expect(screen.getByLabelText('YAML section')).toBeInTheDocument();
   expect(
     screen.getByText('WYSIWYG body (type directly in preview)'),
   ).toBeInTheDocument();
+  expect(screen.getByLabelText('Body section')).toBeInTheDocument();
   expect(
     screen.getByLabelText('WYSIWYG body (type directly in preview)'),
   ).toBeInTheDocument();

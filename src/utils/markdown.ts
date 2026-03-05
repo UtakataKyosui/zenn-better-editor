@@ -21,6 +21,11 @@ export const splitMarkdownParts = (value: string): MarkdownParts => {
   };
 };
 
+export const stripLeadingFrontmatter = (value: string) => {
+  const parts = splitMarkdownParts(value);
+  return parts.frontmatter ? parts.body : value;
+};
+
 export const mergeMarkdownParts = ({ frontmatter, body }: MarkdownParts) => {
   const normalizedFrontmatter = frontmatter.trim();
 

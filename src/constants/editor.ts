@@ -1,5 +1,3 @@
-export const AUTOSAVE_STORAGE_KEY = 'rich-zenn-editor:draft';
-
 export const INITIAL_MARKDOWN = `---
 title: "Rich Zenn Editor preview demo"
 emoji: "📚"

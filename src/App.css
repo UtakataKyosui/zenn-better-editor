@@ -157,6 +157,10 @@ button {
   padding: 20px;
 }
 
+.panel--yaml {
+  padding-bottom: 24px;
+}
+
 .preview-panel {
   margin-top: 20px;
 }
@@ -185,6 +189,18 @@ button {
 .hybrid-surface__render {
   display: grid;
   gap: 10px;
+}
+
+.editor-block {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.editor-block--body {
+  background: rgba(248, 250, 252, 0.7);
 }
 
 .hybrid-surface__preview {
@@ -403,9 +419,13 @@ button {
 
 .source-label {
   display: block;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
   color: #d7e8ff;
   font-size: 0.92rem;
+}
+
+.editor-block--body .source-label {
+  color: #334155;
 }
 
 .hybrid-surface.is-seamless .source-label {
@@ -634,7 +654,7 @@ button {
   background: rgba(15, 23, 42, 0.55);
   border-radius: 14px;
   border: 1px solid rgba(148, 163, 184, 0.12);
-  margin-bottom: 18px;
+  margin-bottom: 0;
 }
 
 .fm-field {

@@ -2,36 +2,62 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import markdownToHtml from 'zenn-markdown-html';
 import { HeroPanel } from '../components/HeroPanel';
 import { HybridSurface } from '../components/HybridSurface';
-import {
-  AUTOSAVE_STORAGE_KEY,
-  INITIAL_MARKDOWN,
-  MARKDOWN_FILE_TYPES,
-} from '../constants/editor';
+import { INITIAL_MARKDOWN, MARKDOWN_FILE_TYPES } from '../constants/editor';
 import {
   countWords,
   mergeMarkdownParts,
   splitMarkdownParts,
+  stripLeadingFrontmatter,
 } from '../utils/markdown';
 
-const getStorage = () => {
-  if (typeof window === 'undefined') {
-    return null;
-  }
+const DRAFT_FILE_NAME = 'rich-zenn-editor-draft.md';
 
-  const { localStorage } = window;
-
+const getDraftDirectory = async () => {
   if (
-    typeof localStorage?.getItem !== 'function' ||
-    typeof localStorage?.setItem !== 'function'
+    typeof navigator === 'undefined' ||
+    typeof navigator.storage?.getDirectory !== 'function'
   ) {
     return null;
   }
 
-  return localStorage;
+  try {
+    return await navigator.storage.getDirectory();
+  } catch {
+    return null;
+  }
 };
 
-const getInitialMarkdown = () => {
-  return getStorage()?.getItem(AUTOSAVE_STORAGE_KEY) ?? INITIAL_MARKDOWN;
+const readDraftFromFileSystem = async () => {
+  const directory = await getDraftDirectory();
+  if (!directory) {
+    return null;
+  }
+
+  try {
+    const fileHandle = await directory.getFileHandle(DRAFT_FILE_NAME);
+    const file = await fileHandle.getFile();
+    return await file.text();
+  } catch {
+    return null;
+  }
+};
+
+const writeDraftToFileSystem = async (markdown: string) => {
+  const directory = await getDraftDirectory();
+  if (!directory) {
+    return;
+  }
+
+  try {
+    const fileHandle = await directory.getFileHandle(DRAFT_FILE_NAME, {
+      create: true,
+    });
+    const writable = await fileHandle.createWritable();
+    await writable.write(markdown);
+    await writable.close();
+  } catch {
+    // ignore write errors; manual save/open still works
+  }
 };
 
 const shouldUseExternalEmbedOrigin = () => {
@@ -43,11 +69,7 @@ const shouldUseExternalEmbedOrigin = () => {
 };
 
 const Tiptap = () => {
-  const initialMarkdown = useMemo(() => getInitialMarkdown(), []);
-  const initialParts = useMemo(
-    () => splitMarkdownParts(initialMarkdown),
-    [initialMarkdown],
-  );
+  const initialParts = useMemo(() => splitMarkdownParts(INITIAL_MARKDOWN), []);
   const [frontmatter, setFrontmatter] = useState(initialParts.frontmatter);
   const [body, setBody] = useState(initialParts.body);
   const [renderedHtml, setRenderedHtml] = useState('');
@@ -61,8 +83,35 @@ const Tiptap = () => {
     return mergeMarkdownParts({ frontmatter, body });
   }, [frontmatter, body]);
 
+  const loadMarkdownDocument = (nextMarkdown: string, nextName: string) => {
+    const parts = splitMarkdownParts(nextMarkdown);
+    setFrontmatter(parts.frontmatter);
+    setBody(parts.body);
+    setDocumentName(nextName);
+    setSaveStatus(`Loaded ${nextName}`);
+  };
+
   useEffect(() => {
-    getStorage()?.setItem(AUTOSAVE_STORAGE_KEY, markdown);
+    let cancelled = false;
+
+    void readDraftFromFileSystem().then((savedDraft) => {
+      if (cancelled || !savedDraft) return;
+      loadMarkdownDocument(savedDraft, DRAFT_FILE_NAME);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void writeDraftToFileSystem(markdown);
+    }, 300);
+
+    return () => {
+      clearTimeout(timer);
+    };
   }, [markdown]);
 
   useEffect(() => {
@@ -71,7 +120,8 @@ const Tiptap = () => {
       ? { embedOrigin: 'https://embed.zenn.studio' as const }
       : undefined;
 
-    void markdownToHtml(markdown, options)
+    // WYSIWYG body should never include frontmatter.
+    void markdownToHtml(body, options)
       .then((html) => {
         if (!cancelled) {
           setRenderedHtml(html);
@@ -86,19 +136,11 @@ const Tiptap = () => {
     return () => {
       cancelled = true;
     };
-  }, [markdown]);
+  }, [body]);
 
   useEffect(() => {
     void import('zenn-embed-elements');
   }, []);
-
-  const loadMarkdownDocument = (nextMarkdown: string, nextName: string) => {
-    const parts = splitMarkdownParts(nextMarkdown);
-    setFrontmatter(parts.frontmatter);
-    setBody(parts.body);
-    setDocumentName(nextName);
-    setSaveStatus(`Loaded ${nextName}`);
-  };
 
   const readFile = async (file: File) => {
     const nextMarkdown = await file.text();
@@ -210,7 +252,7 @@ const Tiptap = () => {
           setSaveStatus('Live markdown editing');
         }}
         onChangeBody={(val) => {
-          setBody(val);
+          setBody(stripLeadingFrontmatter(val));
           setSaveStatus('Live markdown editing');
         }}
       />

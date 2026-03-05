@@ -32,11 +32,26 @@ interface FileSystemWritableFileStream {
   close(): Promise<void>;
 }
 
+interface FileSystemGetFileOptions {
+  create?: boolean;
+}
+
 interface FileSystemFileHandle {
   readonly kind: 'file';
   readonly name: string;
   getFile(): Promise<File>;
   createWritable(): Promise<FileSystemWritableFileStream>;
+}
+
+interface FileSystemDirectoryHandle {
+  getFileHandle(
+    name: string,
+    options?: FileSystemGetFileOptions,
+  ): Promise<FileSystemFileHandle>;
+}
+
+interface StorageManager {
+  getDirectory?: () => Promise<FileSystemDirectoryHandle>;
 }
 
 interface Window {
