@@ -39,7 +39,7 @@ export const TiptapEditor = ({
     ],
     // Start with pre-rendered HTML so Zenn-specific blocks are parsed
     // by our custom node extensions via parseHTML rules
-    content: initialHtml || markdown,
+    content: initialHtml || '',
     editorProps: {
       attributes: {
         class: className || '',
@@ -90,7 +90,7 @@ export const TiptapEditor = ({
     const currentMarkdown =
       (editor.storage.markdown as any)?.getMarkdown?.() || '';
     if (currentMarkdown !== markdown) {
-      editor.commands.setContent(markdown);
+      editor.commands.setContent(markdown, { contentType: 'markdown' });
     }
   }, [markdown, editor]);
 
