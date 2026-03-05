@@ -17,6 +17,7 @@ import {
   stripLeadingFrontmatter,
 } from '../utils/markdown';
 import { validateWithZennModel } from '../utils/zenn-model';
+import { bootZennEmbedRuntime } from '../utils/zenn-embed-runtime';
 
 const shouldUseExternalEmbedOrigin = () => {
   if (typeof navigator === 'undefined') {
@@ -163,7 +164,7 @@ const Tiptap = () => {
 
   useEffect(() => {
     if (shouldUseExternalEmbedOrigin()) {
-      void import('zenn-embed-elements');
+      bootZennEmbedRuntime();
     }
   }, []);
 

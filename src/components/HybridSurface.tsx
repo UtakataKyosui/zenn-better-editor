@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react';
+import { primeZennEmbeddedIframes } from '../utils/zenn-embed-runtime';
 import { FrontmatterEditor } from './FrontmatterEditor';
 import { TiptapEditor } from './TiptapEditor';
 
@@ -20,12 +22,19 @@ export const HybridSurface = ({
   onChangeBody,
   onToggleSeamless,
 }: HybridSurfaceProps) => {
+  const splitPreviewRef = useRef<HTMLDivElement | null>(null);
   const editorLabel = isSeamless
     ? 'WYSIWYG body (type directly in preview)'
     : 'Markdown body';
   const editorClassName = isSeamless
     ? 'source-editor source-editor--fused source-editor--wysiwyg znc'
     : 'source-editor source-editor--fused tiptap-prose';
+
+  useEffect(() => {
+    if (isSeamless) return;
+    if (!splitPreviewRef.current) return;
+    primeZennEmbeddedIframes(splitPreviewRef.current);
+  }, [isSeamless, renderedHtml]);
 
   return (
     <section className="workspace-grid">
@@ -89,6 +98,7 @@ export const HybridSurface = ({
               <div className="hybrid-surface__render">
                 <p className="panel-label">Rendered output</p>
                 <div
+                  ref={splitPreviewRef}
                   className="hybrid-surface__preview preview-surface__content znc"
                   // biome-ignore lint/security/noDangerouslySetInnerHtml: intentionally rendering markdown output
                   dangerouslySetInnerHTML={{ __html: renderedHtml }}

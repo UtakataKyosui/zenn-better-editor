@@ -15,6 +15,7 @@ import { ZennEmbedBlock } from '../tiptap/extensions/zenn-embeds';
 import { ZennDetails, ZennMessage } from '../tiptap/extensions/zenn-nodes';
 import { ZennShikiCodeHighlight } from '../tiptap/extensions/shiki-code-highlight';
 import { normalizeZennHtmlForTiptap } from '../utils/zenn-html';
+import { bootZennEmbedRuntime } from '../utils/zenn-embed-runtime';
 
 type TiptapEditorProps = {
   markdown: string;
@@ -176,7 +177,7 @@ export const TiptapEditor = ({
     ) {
       return;
     }
-    void import('zenn-embed-elements');
+    bootZennEmbedRuntime();
   }, []);
 
   const applyMermaidChanges = useCallback(() => {

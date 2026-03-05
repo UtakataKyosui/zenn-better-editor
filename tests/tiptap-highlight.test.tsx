@@ -314,7 +314,13 @@ test('renders zenn embed blocks inside wysiwyg editor', async () => {
 
   await waitFor(
     () => {
-      expect(container.querySelector('.embed-block iframe')).not.toBeNull();
+      const iframe = container.querySelector(
+        '.embed-block.zenn-embedded-card iframe',
+      ) as HTMLIFrameElement | null;
+      expect(iframe).not.toBeNull();
+      expect(iframe?.getAttribute('data-content')).toContain(
+        'https%3A%2F%2Fzenn.dev%2Fzenn%2Farticles%2Fmarkdown-guide',
+      );
     },
     { timeout: 5000 },
   );

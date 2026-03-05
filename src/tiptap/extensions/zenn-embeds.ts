@@ -1,4 +1,5 @@
 import { Node, mergeAttributes } from '@tiptap/core';
+import { primeZennEmbeddedIframe } from '../../utils/zenn-embed-runtime';
 
 type IframeAttrs = {
   src: string;
@@ -176,6 +177,50 @@ export const ZennEmbedBlock = Node.create({
     });
 
     return ['span', spanAttrs, ['iframe', iframeAttrs]];
+  },
+
+  addNodeView() {
+    return ({ node }) => {
+      const dom = document.createElement('span');
+      dom.setAttribute('contenteditable', 'false');
+
+      const renderNode = (nextNode: typeof node) => {
+        const attrs = nextNode.attrs as Record<string, string>;
+        dom.className = attrs.className || 'embed-block';
+        dom.innerHTML = '';
+
+        const iframe = document.createElement('iframe');
+        const iframeAttrs = assignIframeAttrs({
+          src: attrs.iframeSrc || '',
+          id: attrs.iframeId || '',
+          dataContent: attrs.iframeDataContent || '',
+          width: attrs.iframeWidth || '',
+          style: attrs.iframeStyle || '',
+          scrolling: attrs.iframeScrolling || '',
+          frameborder: attrs.iframeFrameborder || '',
+          loading: attrs.iframeLoading || '',
+          allow: attrs.iframeAllow || '',
+          allowfullscreen: attrs.iframeAllowfullscreen || '',
+        });
+
+        Object.entries(iframeAttrs).forEach(([key, value]) => {
+          iframe.setAttribute(key, value);
+        });
+        dom.append(iframe);
+        primeZennEmbeddedIframe(iframe);
+      };
+
+      renderNode(node);
+
+      return {
+        dom,
+        update: (updatedNode) => {
+          if (updatedNode.type.name !== this.name) return false;
+          renderNode(updatedNode);
+          return true;
+        },
+      };
+    };
   },
 
   renderMarkdown(node) {

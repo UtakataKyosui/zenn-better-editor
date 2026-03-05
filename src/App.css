@@ -526,6 +526,11 @@ button {
   border: 0;
 }
 
+.znc .zenn-embedded-card iframe,
+.znc .zenn-embedded-link-card iframe {
+  height: 125px;
+}
+
 .source-editor--wysiwyg .tiptap-mermaid-preview {
   margin: 0.8rem 0 1.4rem;
   border: 1px solid rgba(148, 163, 184, 0.22);
