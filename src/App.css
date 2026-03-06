@@ -162,10 +162,10 @@ button {
   font-size: 1.1rem;
 }
 
-.workspace-grid {
-  display: grid;
-  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
-  gap: 20px;
+.workspace-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
 .panel {
@@ -174,7 +174,10 @@ button {
 }
 
 .panel--yaml {
-  padding-bottom: 24px;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 24px 24px 0 0;
+  border-bottom: none;
 }
 
 .panel--editor {
@@ -182,6 +185,8 @@ button {
   overflow: hidden;
   background: #fff;
   color: #0f172a;
+  border-radius: 0 0 24px 24px;
+  border-top: none;
 }
 
 .preview-panel {
@@ -719,53 +724,70 @@ button {
   outline-offset: -2px;
 }
 
-/* ── Frontmatter Editor ── */
+/* ── Zenn Header Preview (Frontmatter Editor) ── */
 
-.frontmatter-editor {
+.zenn-header-preview {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 18px;
-  background: rgba(15, 23, 42, 0.55);
-  border-radius: 14px;
-  border: 1px solid rgba(148, 163, 184, 0.12);
-  margin-bottom: 0;
-}
-
-.fm-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.fm-field--inline {
-  flex-direction: row;
   align-items: center;
-  gap: 12px;
+  gap: 20px;
+  padding: 56px 40px 44px;
+  background: linear-gradient(180deg, #0b1628 0%, #0f1f3a 60%, #0d1a32 100%);
+  text-align: center;
+  max-width: 740px;
+  margin: 0 auto;
+  width: 100%;
 }
 
-.fm-field__label {
-  font-size: 0.72rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: rgba(148, 163, 184, 0.7);
+.zenn-header-preview__emoji-btn {
+  width: 80px;
+  height: 80px;
+  font-size: 3rem;
+  border-radius: 50%;
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
 }
 
-.fm-field__input {
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 8px;
-  color: #e8ecf3;
-  padding: 8px 12px;
-  font-size: 0.92rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
+.zenn-header-preview__emoji-btn:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.1);
 }
 
-.fm-field__input:focus {
+.zenn-header-preview__title {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid transparent;
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.5;
+  padding: 4px 8px;
   outline: none;
-  border-color: rgba(56, 189, 248, 0.5);
-  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
+  transition: border-color 0.2s;
+  resize: none;
+  overflow: hidden;
+}
+
+.zenn-header-preview__title:focus {
+  border-bottom-color: rgba(125, 211, 252, 0.45);
+}
+
+.zenn-header-preview__title::placeholder {
+  color: rgba(148, 163, 184, 0.35);
+  font-weight: 400;
+}
+
+.zenn-header-preview__meta-row {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 96px;
+  align-items: center;
+}
+
+.zenn-header-preview__topics-row {
+  width: 100%;
 }
 
 /* ── Emoji Picker ── */

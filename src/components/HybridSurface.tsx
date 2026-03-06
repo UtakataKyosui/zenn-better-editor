@@ -19,15 +19,8 @@ export const HybridSurface = ({
   onChangeBody,
 }: HybridSurfaceProps) => {
   return (
-    <section className="workspace-grid">
+    <section className="workspace-column">
       <section className="panel panel--yaml" aria-label="YAML section">
-        <header className="panel-header">
-          <div>
-            <p className="panel-label">Metadata</p>
-            <h2>YAML frontmatter</h2>
-          </div>
-        </header>
-
         <FrontmatterEditor
           frontmatter={frontmatter}
           onChange={onChangeFrontmatter}

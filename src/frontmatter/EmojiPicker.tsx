@@ -599,9 +599,10 @@ const EMOJIS: { emoji: string; keywords: string }[] = [
 type EmojiPickerProps = {
   value: string;
   onChange: (emoji: string) => void;
+  triggerClassName?: string;
 };
 
-export const EmojiPicker = ({ value, onChange }: EmojiPickerProps) => {
+export const EmojiPicker = ({ value, onChange, triggerClassName }: EmojiPickerProps) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({});
@@ -676,7 +677,7 @@ export const EmojiPicker = ({ value, onChange }: EmojiPickerProps) => {
       <button
         ref={triggerRef}
         type="button"
-        className="emoji-picker__trigger"
+        className={`emoji-picker__trigger${triggerClassName ? ` ${triggerClassName}` : ''}`}
         onClick={() => {
           setOpen((o) => !o);
           setSearch('');

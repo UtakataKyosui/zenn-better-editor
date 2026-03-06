@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   type ZennFrontmatter,
   parseFrontmatter,
@@ -28,6 +28,14 @@ export const FrontmatterEditor = ({
   onChange,
 }: FrontmatterEditorProps) => {
   const data = useMemo(() => parseFrontmatter(frontmatter), [frontmatter]);
+  const titleRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const el = titleRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, [data.title]);
 
   const update = useCallback(
     (patch: Partial<ZennFrontmatter>) => {
@@ -38,54 +46,38 @@ export const FrontmatterEditor = ({
   );
 
   return (
-    <fieldset className="frontmatter-editor" aria-label="YAML frontmatter">
+    <div className="zenn-header-preview" aria-label="YAML frontmatter">
+      {/* Emoji - large, centered */}
+      <EmojiPicker
+        value={data.emoji}
+        onChange={(emoji) => update({ emoji })}
+        triggerClassName="zenn-header-preview__emoji-btn"
+      />
+
       {/* Title */}
-      <div className="fm-field">
-        <label className="fm-field__label" htmlFor="fm-title">
-          Title
-        </label>
-        <input
-          id="fm-title"
-          type="text"
-          className="fm-field__input"
-          value={data.title}
-          onChange={(e) => update({ title: e.target.value })}
-          placeholder="Article title..."
-        />
-      </div>
+      <textarea
+        ref={titleRef}
+        id="fm-title"
+        className="zenn-header-preview__title"
+        value={data.title}
+        onChange={(e) => {
+          update({ title: e.target.value });
+          e.target.style.height = 'auto';
+          e.target.style.height = `${e.target.scrollHeight}px`;
+        }}
+        placeholder="記事タイトルを入力..."
+        aria-label="Title"
+        rows={1}
+      />
 
-      {/* Emoji */}
-      <div className="fm-field fm-field--inline">
-        <span className="fm-field__label">Emoji</span>
-        <EmojiPicker
-          value={data.emoji}
-          onChange={(emoji) => update({ emoji })}
-        />
-      </div>
-
-      {/* Type */}
-      <div className="fm-field">
-        <span className="fm-field__label">Type</span>
+      {/* Type + Published */}
+      <div className="zenn-header-preview__meta-row">
         <BadgeSelector
           options={TYPE_OPTIONS}
           selected={data.type}
           onChange={(value) => update({ type: value })}
           label="Article type"
         />
-      </div>
-
-      {/* Topics */}
-      <div className="fm-field">
-        <span className="fm-field__label">Topics</span>
-        <TopicTagInput
-          topics={data.topics}
-          onChange={(topics) => update({ topics })}
-        />
-      </div>
-
-      {/* Published */}
-      <div className="fm-field">
-        <span className="fm-field__label">Status</span>
         <BadgeSelector
           options={PUBLISHED_OPTIONS}
           selected={String(data.published) as 'true' | 'false'}
@@ -93,6 +85,14 @@ export const FrontmatterEditor = ({
           label="Publish status"
         />
       </div>
-    </fieldset>
+
+      {/* Topics */}
+      <div className="zenn-header-preview__topics-row">
+        <TopicTagInput
+          topics={data.topics}
+          onChange={(topics) => update({ topics })}
+        />
+      </div>
+    </div>
   );
 };
