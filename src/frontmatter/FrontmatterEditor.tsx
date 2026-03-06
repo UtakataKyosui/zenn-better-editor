@@ -5,6 +5,7 @@ import {
   serializeFrontmatter,
 } from './frontmatter';
 import { BadgeSelector } from './BadgeSelector';
+import { EmojiPicker } from './EmojiPicker';
 import { TopicTagInput } from './TopicTagInput';
 
 type FrontmatterEditorProps = {
@@ -55,22 +56,10 @@ export const FrontmatterEditor = ({
 
       {/* Emoji */}
       <div className="fm-field fm-field--inline">
-        <label className="fm-field__label" htmlFor="fm-emoji">
-          Emoji
-        </label>
-        <input
-          id="fm-emoji"
-          type="text"
-          className="fm-field__input fm-field__input--emoji"
+        <span className="fm-field__label">Emoji</span>
+        <EmojiPicker
           value={data.emoji}
-          onChange={(e) => {
-            // Take only the last grapheme cluster entered
-            const chars = [...e.target.value];
-            const lastChar = chars[chars.length - 1] ?? '';
-            update({ emoji: lastChar });
-          }}
-          placeholder="📝"
-          maxLength={4}
+          onChange={(emoji) => update({ emoji })}
         />
       </div>
 
