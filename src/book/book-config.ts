@@ -7,6 +7,8 @@ export type BookConfig = {
   toc_depth: 0 | 1 | 2 | 3;
   /** Slug-based chapter ordering (Zenn CLI new format) */
   chapters?: string[];
+  /** Display icon emoji (UI only, not part of Zenn spec) */
+  emoji?: string;
 };
 
 export const DEFAULT_BOOK_CONFIG: BookConfig = {
@@ -87,6 +89,9 @@ export const parseBookConfig = (yaml: string): BookConfig => {
       case 'published':
         result.published = value === 'true';
         break;
+      case 'emoji':
+        result.emoji = unquote(value);
+        break;
       case 'toc_depth': {
         const d = Number.parseInt(value, 10);
         result.toc_depth = (d === 0 || d === 1 || d === 3) ? d : 2;
@@ -100,6 +105,7 @@ export const parseBookConfig = (yaml: string): BookConfig => {
 
 export const serializeBookConfig = (config: BookConfig): string => {
   const lines: string[] = [];
+  if (config.emoji) lines.push(`emoji: "${config.emoji}"`);
   lines.push(`title: "${config.title}"`);
   lines.push(`summary: "${config.summary}"`);
   if (config.topics.length === 0) {
