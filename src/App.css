@@ -1691,6 +1691,16 @@ html[data-theme='light'] body {
 
 .book-config-panel__icon {
   font-size: 3rem;
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  padding: 4px 8px;
+  line-height: 1;
+  transition: border-color 0.15s;
+}
+
+.book-config-panel__icon:hover {
+  border-color: rgba(148, 163, 184, 0.3);
 }
 
 .book-config-panel__title {

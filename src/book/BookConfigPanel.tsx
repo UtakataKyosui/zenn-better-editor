@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { TopicTagInput } from '../frontmatter/TopicTagInput';
 import { BadgeSelector } from '../frontmatter/BadgeSelector';
+import { EmojiPicker } from '../frontmatter/EmojiPicker';
 import { type BookConfig, serializeBookConfig, parseBookConfig } from './book-config';
 
 type BookConfigPanelProps = {
@@ -32,7 +33,11 @@ export const BookConfigPanel = ({ configYaml, onChange }: BookConfigPanelProps) 
 
   return (
     <div className="book-config-panel" aria-label="本の設定">
-      <div className="book-config-panel__icon">📚</div>
+      <EmojiPicker
+        value={config.emoji || '📚'}
+        onChange={(emoji) => update({ emoji })}
+        triggerClassName="book-config-panel__icon"
+      />
 
       <input
         className="book-config-panel__title"
