@@ -4,7 +4,7 @@ export type BookConfig = {
   topics: string[];
   price: number;
   published: boolean;
-  toc_depth: 1 | 2;
+  toc_depth: 0 | 1 | 2 | 3;
   /** Slug-based chapter ordering (Zenn CLI new format) */
   chapters?: string[];
 };
@@ -87,9 +87,11 @@ export const parseBookConfig = (yaml: string): BookConfig => {
       case 'published':
         result.published = value === 'true';
         break;
-      case 'toc_depth':
-        result.toc_depth = value === '1' ? 1 : 2;
+      case 'toc_depth': {
+        const d = Number.parseInt(value, 10);
+        result.toc_depth = (d === 0 || d === 1 || d === 3) ? d : 2;
         break;
+      }
     }
   }
 

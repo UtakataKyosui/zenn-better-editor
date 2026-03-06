@@ -1763,6 +1763,102 @@ html[data-theme='light'] body {
   max-width: 640px;
 }
 
+.book-config-panel__price-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  max-width: 640px;
+}
+
+.book-config-panel__price-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.7);
+}
+
+[data-theme='light'] .book-config-panel__price-label {
+  color: #64748b;
+}
+
+.book-config-panel__price-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.book-config-panel__price-badge {
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: transparent;
+  color: rgba(148, 163, 184, 0.7);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.book-config-panel__price-badge:hover {
+  border-color: rgba(148, 163, 184, 0.4);
+  color: #e8ecf3;
+}
+
+.book-config-panel__price-badge.is-active {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #a5b4fc;
+}
+
+[data-theme='light'] .book-config-panel__price-badge {
+  color: #64748b;
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme='light'] .book-config-panel__price-badge:hover {
+  color: #1e293b;
+  border-color: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme='light'] .book-config-panel__price-badge.is-active {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #4f46e5;
+}
+
+.book-config-panel__price-input {
+  width: 100px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: #e8ecf3;
+  font-size: 0.9rem;
+  text-align: right;
+}
+
+.book-config-panel__price-input:focus {
+  outline: none;
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+[data-theme='light'] .book-config-panel__price-input {
+  background: rgba(0, 0, 0, 0.04);
+  color: #1e293b;
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+.book-config-panel__price-hint {
+  font-size: 0.72rem;
+  color: rgba(148, 163, 184, 0.5);
+}
+
+[data-theme='light'] .book-config-panel__price-hint {
+  color: #94a3b8;
+}
+
 .book-config-panel__chapters {
   width: 100%;
   max-width: 640px;

@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { TopicTagInput } from '../frontmatter/TopicTagInput';
 import { BadgeSelector } from '../frontmatter/BadgeSelector';
 import { type BookConfig, serializeBookConfig, parseBookConfig } from './book-config';
@@ -13,14 +13,11 @@ const PUBLISHED_OPTIONS = [
   { value: 'true' as const, label: 'Published', icon: '🚀' },
 ];
 
-const PRICE_OPTIONS = [
-  { value: '0' as const, label: '無料', icon: '🆓' },
-  { value: 'paid' as const, label: '有料', icon: '💰' },
-];
-
 const TOC_DEPTH_OPTIONS = [
-  { value: '2' as const, label: 'H2まで', icon: '🔖' },
+  { value: '0' as const, label: '非表示', icon: '🚫' },
   { value: '1' as const, label: 'H1のみ', icon: '📌' },
+  { value: '2' as const, label: 'H1+H2', icon: '🔖' },
+  { value: '3' as const, label: 'H1+H2+H3', icon: '📋' },
 ];
 
 export const BookConfigPanel = ({ configYaml, onChange }: BookConfigPanelProps) => {
@@ -62,19 +59,18 @@ export const BookConfigPanel = ({ configYaml, onChange }: BookConfigPanelProps) 
           onChange={(v) => update({ published: v === 'true' })}
           label="公開状態"
         />
-        <BadgeSelector
-          options={PRICE_OPTIONS}
-          selected={config.price === 0 ? '0' : 'paid'}
-          onChange={(v) => update({ price: v === '0' ? 0 : 500 })}
-          label="価格設定"
-        />
+      </div>
+
+      <div className="book-config-panel__price-row">
+        <label className="book-config-panel__price-label">価格 (円)</label>
+        <PriceInput price={config.price} onChange={(price) => update({ price })} />
       </div>
 
       <div className="book-config-panel__row">
         <BadgeSelector
           options={TOC_DEPTH_OPTIONS}
-          selected={String(config.toc_depth) as '1' | '2'}
-          onChange={(v) => update({ toc_depth: v === '1' ? 1 : 2 })}
+          selected={String(config.toc_depth) as '0' | '1' | '2' | '3'}
+          onChange={(v) => update({ toc_depth: Number(v) as 0 | 1 | 2 | 3 })}
           label="目次の深さ"
         />
       </div>
@@ -95,6 +91,62 @@ export const BookConfigPanel = ({ configYaml, onChange }: BookConfigPanelProps) 
           />
         </div>
       )}
+    </div>
+  );
+};
+
+type PriceInputProps = {
+  price: number;
+  onChange: (price: number) => void;
+};
+
+const PriceInput = ({ price, onChange }: PriceInputProps) => {
+  const isPaid = price > 0;
+  const [paidDraft, setPaidDraft] = useState(price > 0 ? String(price) : '500');
+
+  const commitPaid = () => {
+    const n = Number.parseInt(paidDraft, 10);
+    if (Number.isNaN(n) || n <= 0) {
+      onChange(500);
+      setPaidDraft('500');
+      return;
+    }
+    const clamped = Math.min(5000, Math.max(200, Math.round(n / 100) * 100));
+    onChange(clamped);
+    setPaidDraft(String(clamped));
+  };
+
+  return (
+    <div className="book-config-panel__price-input-row">
+      <button
+        type="button"
+        className={`book-config-panel__price-badge${!isPaid ? ' is-active' : ''}`}
+        onClick={() => onChange(0)}
+      >
+        🆓 無料
+      </button>
+      <button
+        type="button"
+        className={`book-config-panel__price-badge${isPaid ? ' is-active' : ''}`}
+        onClick={() => { const v = Number.parseInt(paidDraft, 10); onChange(Number.isNaN(v) || v < 200 ? 500 : v); }}
+      >
+        💰 有料
+      </button>
+      {isPaid && (
+        <input
+          type="number"
+          className="book-config-panel__price-input"
+          value={paidDraft}
+          min={200}
+          max={5000}
+          step={100}
+          onChange={(e) => setPaidDraft(e.target.value)}
+          onBlur={commitPaid}
+          onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+          aria-label="価格 (円)"
+        />
+      )}
+      {isPaid && <span className="book-config-panel__price-hint">円 (200〜5000 / 100円単位)</span>}
     </div>
   );
 };
