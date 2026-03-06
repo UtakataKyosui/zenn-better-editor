@@ -3,7 +3,7 @@ import markdownToHtml from 'zenn-markdown-html';
 import { HeroPanel } from '../components/HeroPanel';
 import { HybridSurface } from '../components/HybridSurface';
 import { INITIAL_MARKDOWN, MARKDOWN_FILE_TYPES } from '../constants/editor';
-import { serializeFrontmatter } from '../utils/frontmatter';
+import { serializeFrontmatter } from '../frontmatter/frontmatter';
 import {
   clearRecentFileHandle,
   ensureHandlePermission,

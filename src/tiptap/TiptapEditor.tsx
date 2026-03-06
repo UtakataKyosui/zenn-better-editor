@@ -10,30 +10,30 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   MermaidPreview,
   type MermaidEditPayload,
-} from '../tiptap/extensions/mermaid-preview';
-import { ZennCodeBlock } from '../tiptap/extensions/zenn-code-block';
-import { ZennEmbedBlock } from '../tiptap/extensions/zenn-embeds';
+} from './extensions/mermaid-preview';
+import { ZennCodeBlock } from './extensions/zenn-code-block';
+import { ZennEmbedBlock } from './extensions/zenn-embeds';
 import {
   ZennFootnoteReference,
   ZennFootnotesSection,
-} from '../tiptap/extensions/zenn-footnotes';
-import { ZennImage } from '../tiptap/extensions/zenn-image';
-import { ZennDetails, ZennMessage } from '../tiptap/extensions/zenn-nodes';
-import { ZennShikiCodeHighlight } from '../tiptap/extensions/shiki-code-highlight';
-import { normalizeZennHtmlForTiptap } from '../utils/zenn-html';
+} from './extensions/zenn-footnotes';
+import { ZennImage } from './extensions/zenn-image';
+import { ZennDetails, ZennMessage } from './extensions/zenn-containers';
+import { ZennShikiCodeHighlight } from './extensions/shiki-code-highlight';
+import { normalizeZennHtmlForTiptap } from './zenn-html';
 import { bootZennEmbedRuntime } from '../utils/zenn-embed-runtime';
 import {
   ZENN_CONTAINER_CONVERSION_META_KEY,
   convertTypedZennContainers,
-} from '../utils/zenn-container-transform';
+} from './extensions/zenn-container-transform';
 import {
   ZENN_IMAGE_CONVERSION_META_KEY,
   convertTypedZennImages,
-} from '../utils/zenn-image-transform';
+} from './extensions/zenn-image-transform';
 import {
   ZENN_FOOTNOTE_CONVERSION_META_KEY,
   convertTypedZennFootnotes,
-} from '../utils/zenn-footnote-transform';
+} from './extensions/zenn-footnote-transform';
 
 type TiptapEditorProps = {
   markdown: string;

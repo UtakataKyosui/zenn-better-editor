@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { primeZennEmbeddedIframes } from '../utils/zenn-embed-runtime';
-import { FrontmatterEditor } from './FrontmatterEditor';
-import { TiptapEditor } from './TiptapEditor';
+import { FrontmatterEditor } from '../frontmatter/FrontmatterEditor';
+import { TiptapEditor } from '../tiptap/TiptapEditor';
 
 type HybridSurfaceProps = {
   frontmatter: string;

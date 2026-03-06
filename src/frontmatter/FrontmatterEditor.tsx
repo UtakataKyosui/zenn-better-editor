@@ -3,7 +3,7 @@ import {
   type ZennFrontmatter,
   parseFrontmatter,
   serializeFrontmatter,
-} from '../utils/frontmatter';
+} from './frontmatter';
 import { BadgeSelector } from './BadgeSelector';
 import { TopicTagInput } from './TopicTagInput';
 
