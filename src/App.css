@@ -177,65 +177,17 @@ button {
   padding-bottom: 24px;
 }
 
+.panel--editor {
+  padding: 0;
+  overflow: hidden;
+  background: #fff;
+  color: #0f172a;
+}
+
 .preview-panel {
   margin-top: 20px;
 }
 
-.hybrid-surface {
-  display: grid;
-  gap: 18px;
-  border-radius: 18px;
-  padding: 20px;
-  background: #fff;
-  position: relative;
-}
-
-.hybrid-surface.is-seamless {
-  display: flex;
-  flex-direction: column;
-}
-
-.hybrid-surface.is-seamless .hybrid-surface__input {
-  /* In seamless mode, frontmatter and tiptap layout differently */
-  display: flex;
-  flex-direction: column;
-}
-
-.hybrid-surface__input,
-.hybrid-surface__render {
-  display: grid;
-  gap: 10px;
-}
-
-.editor-block {
-  display: grid;
-  gap: 12px;
-  padding: 16px;
-  border-radius: 14px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-}
-
-.editor-block--body {
-  background: rgba(248, 250, 252, 0.7);
-}
-
-.hybrid-surface__preview {
-  min-height: 320px;
-  border-radius: 16px;
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  padding: 28px;
-  background: #fff;
-}
-
-.hybrid-surface__divider {
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    rgba(148, 163, 184, 0),
-    rgba(148, 163, 184, 0.55),
-    rgba(148, 163, 184, 0)
-  );
-}
 
 .panel-header,
 .source-actions,
@@ -290,20 +242,6 @@ button {
   background: rgba(14, 116, 144, 0.28);
 }
 
-.editor-surface {
-  min-height: 540px;
-  border-radius: 20px;
-  border: 1px solid rgba(148, 163, 184, 0.12);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 16%),
-    rgba(255, 255, 255, 0.98);
-  color: #0f172a;
-  overflow: hidden;
-}
-
-.editor-surface--visual {
-  padding: 20px;
-}
 
 .visual-canvas {
   display: grid;
@@ -433,20 +371,6 @@ button {
   color: #f8fafc;
 }
 
-.source-label {
-  display: block;
-  margin-bottom: 6px;
-  color: #d7e8ff;
-  font-size: 0.92rem;
-}
-
-.editor-block--body .source-label {
-  color: #334155;
-}
-
-.hybrid-surface.is-seamless .source-label {
-  color: #475569;
-}
 
 .preview-toolbar {
   justify-content: space-between;
@@ -500,7 +424,6 @@ button {
 
 .source-editor--wysiwyg {
   min-height: 420px;
-  border-radius: 16px;
   background: #fff;
   color: #0f172a;
   line-height: 1.8;
@@ -619,6 +542,8 @@ button {
 .tiptap-scroll-container {
   max-height: 70vh;
   overflow-y: auto;
+  background: #fff;
+  color: #0f172a;
 }
 
 .tiptap-table-toolbar {
@@ -994,7 +919,6 @@ button {
     padding: 18px;
   }
 
-  .editor-surface,
   .source-editor,
   .preview-surface {
     min-height: 420px;
