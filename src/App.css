@@ -1763,6 +1763,109 @@ html[data-theme='light'] body {
   max-width: 640px;
 }
 
+.book-config-panel__chapters {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.book-config-panel__chapters-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.7);
+}
+
+[data-theme='light'] .book-config-panel__chapters-label {
+  color: #64748b;
+}
+
+.book-config-panel__chapter-order-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.book-config-panel__chapter-order-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 6px;
+}
+
+[data-theme='light'] .book-config-panel__chapter-order-item {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.book-config-panel__chapter-order-slug {
+  flex: 1;
+  font-size: 0.82rem;
+  font-family: 'IBM Plex Mono', monospace;
+  color: #94a3b8;
+}
+
+[data-theme='light'] .book-config-panel__chapter-order-slug {
+  color: #334155;
+}
+
+.book-config-panel__chapter-order-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.book-config-panel__chapter-order-actions button {
+  padding: 2px 7px;
+  font-size: 0.78rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 4px;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.book-config-panel__chapter-order-actions button:hover:not(:disabled) {
+  background: rgba(125, 211, 252, 0.1);
+  border-color: rgba(125, 211, 252, 0.3);
+  color: #7dd3fc;
+}
+
+.book-config-panel__chapter-order-actions button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+[data-theme='light'] .book-config-panel__chapter-order-actions button {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #64748b;
+}
+
+.book-config-panel__chapter-order-add {
+  font-size: 0.8rem;
+  padding: 5px 10px;
+  background: transparent;
+  border: 1px dashed rgba(148, 163, 184, 0.25);
+  border-radius: 6px;
+  color: rgba(148, 163, 184, 0.6);
+  width: 100%;
+  text-align: left;
+}
+
+.book-config-panel__chapter-order-add:hover {
+  border-color: rgba(125, 211, 252, 0.35);
+  color: #7dd3fc;
+}
+
 /* ── Chapter Frontmatter Editor ── */
 
 .chapter-frontmatter-editor {

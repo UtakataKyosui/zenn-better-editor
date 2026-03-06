@@ -18,6 +18,11 @@ const PRICE_OPTIONS = [
   { value: 'paid' as const, label: '有料', icon: '💰' },
 ];
 
+const TOC_DEPTH_OPTIONS = [
+  { value: '2' as const, label: 'H2まで', icon: '🔖' },
+  { value: '1' as const, label: 'H1のみ', icon: '📌' },
+];
+
 export const BookConfigPanel = ({ configYaml, onChange }: BookConfigPanelProps) => {
   const config = useMemo(() => parseBookConfig(configYaml), [configYaml]);
 
@@ -65,12 +70,75 @@ export const BookConfigPanel = ({ configYaml, onChange }: BookConfigPanelProps) 
         />
       </div>
 
+      <div className="book-config-panel__row">
+        <BadgeSelector
+          options={TOC_DEPTH_OPTIONS}
+          selected={String(config.toc_depth) as '1' | '2'}
+          onChange={(v) => update({ toc_depth: v === '1' ? 1 : 2 })}
+          label="目次の深さ"
+        />
+      </div>
+
       <div className="book-config-panel__topics">
         <TopicTagInput
           topics={config.topics}
           onChange={(topics) => update({ topics })}
         />
       </div>
+
+      {config.chapters !== undefined && (
+        <div className="book-config-panel__chapters">
+          <div className="book-config-panel__chapters-label">チャプター順序</div>
+          <ChapterOrderEditor
+            chapters={config.chapters}
+            onChange={(chapters) => update({ chapters })}
+          />
+        </div>
+      )}
     </div>
+  );
+};
+
+type ChapterOrderEditorProps = {
+  chapters: string[];
+  onChange: (chapters: string[]) => void;
+};
+
+const ChapterOrderEditor = ({ chapters, onChange }: ChapterOrderEditorProps) => {
+  const move = (index: number, dir: -1 | 1) => {
+    const next = [...chapters];
+    const target = index + dir;
+    if (target < 0 || target >= next.length) return;
+    [next[index], next[target]] = [next[target], next[index]];
+    onChange(next);
+  };
+
+  const remove = (index: number) => {
+    onChange(chapters.filter((_, i) => i !== index));
+  };
+
+  const add = () => {
+    const slug = prompt('チャプターのスラッグ（ファイル名から .md を除いたもの）を入力');
+    if (slug?.trim()) onChange([...chapters, slug.trim()]);
+  };
+
+  return (
+    <ol className="book-config-panel__chapter-order-list">
+      {chapters.map((slug, i) => (
+        <li key={slug} className="book-config-panel__chapter-order-item">
+          <span className="book-config-panel__chapter-order-slug">{slug}</span>
+          <div className="book-config-panel__chapter-order-actions">
+            <button type="button" onClick={() => move(i, -1)} disabled={i === 0} aria-label="上へ">↑</button>
+            <button type="button" onClick={() => move(i, 1)} disabled={i === chapters.length - 1} aria-label="下へ">↓</button>
+            <button type="button" onClick={() => remove(i)} aria-label="削除">×</button>
+          </div>
+        </li>
+      ))}
+      <li>
+        <button type="button" className="book-config-panel__chapter-order-add" onClick={add}>
+          + チャプターを追加
+        </button>
+      </li>
+    </ol>
   );
 };
