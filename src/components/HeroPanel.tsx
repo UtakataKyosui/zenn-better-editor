@@ -22,14 +22,14 @@ export const HeroPanel = ({
   onDownloadDocument,
 }: HeroPanelProps) => {
   return (
-    <section className="hero-panel">
-      <p className="eyebrow">Phase 3: WYSIWYG-first editing</p>
-      <h1>Rich Zenn Editor</h1>
-      <p className="hero-copy">
-        YAML Frontmatter
-        を管理しつつ、本文はプレビューの見た目のまま直接編集できます。
-      </p>
-      <div className="file-strip" role="toolbar" aria-label="document controls">
+    <header className="top-bar">
+      <span className="top-bar__brand">Rich Zenn Editor</span>
+
+      <nav
+        className="top-bar__actions"
+        role="toolbar"
+        aria-label="document controls"
+      >
         <button type="button" onClick={onCreateNewDraft}>
           New draft
         </button>
@@ -40,18 +40,18 @@ export const HeroPanel = ({
           Save
         </button>
         <button type="button" onClick={onDownloadDocument}>
-          Download copy
+          Download
         </button>
-        <span className="document-meta">{documentName}</span>
-        <span className="document-meta">{saveStatus}</span>
-      </div>
-      <output className="status-strip" aria-label="editor status">
+      </nav>
+
+      <span className="top-bar__doc-name">{documentName}</span>
+      <span className="top-bar__save-status">{saveStatus}</span>
+
+      <output className="top-bar__status" aria-label="editor status">
         <span>{wordCount} words</span>
         <span>{readingMinutes} min read</span>
         <span>{modelStatus}</span>
-        <span>WYSIWYG direct input</span>
-        <span>Preview synced live</span>
       </output>
-    </section>
+    </header>
   );
 };

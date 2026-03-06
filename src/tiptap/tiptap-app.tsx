@@ -310,7 +310,7 @@ const Tiptap = () => {
   const readingMinutes = Math.max(1, Math.ceil(wordCount / 220));
 
   return (
-    <main className="editor-shell">
+    <div className="app-layout">
       <HeroPanel
         documentName={documentName}
         saveStatus={saveStatus}
@@ -323,37 +323,39 @@ const Tiptap = () => {
         onDownloadDocument={downloadDocument}
       />
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".md,text/markdown,text/plain"
-        hidden
-        onChange={(event) => {
-          const file = event.target.files?.[0];
+      <main className="editor-shell">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".md,text/markdown,text/plain"
+          hidden
+          onChange={(event) => {
+            const file = event.target.files?.[0];
 
-          if (file) {
-            void readFile(file);
-          }
+            if (file) {
+              void readFile(file);
+            }
 
-          event.target.value = '';
-        }}
-      />
+            event.target.value = '';
+          }}
+        />
 
-      <HybridSurface
-        frontmatter={frontmatter}
-        body={body}
-        renderedHtml={renderedHtml}
-        isInitialHtmlReady={isInitialHtmlReady}
-        onChangeFrontmatter={(val) => {
-          setFrontmatter(val);
-          setSaveStatus('Live markdown editing');
-        }}
-        onChangeBody={(val) => {
-          setBody(stripLeadingFrontmatter(val));
-          setSaveStatus('Live markdown editing');
-        }}
-      />
-    </main>
+        <HybridSurface
+          frontmatter={frontmatter}
+          body={body}
+          renderedHtml={renderedHtml}
+          isInitialHtmlReady={isInitialHtmlReady}
+          onChangeFrontmatter={(val) => {
+            setFrontmatter(val);
+            setSaveStatus('Live markdown editing');
+          }}
+          onChangeBody={(val) => {
+            setBody(stripLeadingFrontmatter(val));
+            setSaveStatus('Live markdown editing');
+          }}
+        />
+      </main>
+    </div>
   );
 };
 
