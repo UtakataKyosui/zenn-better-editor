@@ -4,7 +4,7 @@ import { Table } from '@tiptap/extension-table';
 import { TableCell } from '@tiptap/extension-table-cell';
 import { TableHeader } from '@tiptap/extension-table-header';
 import { TableRow } from '@tiptap/extension-table-row';
-import { EditorContent, useEditor } from '@tiptap/react';
+import { EditorContent, useEditor, useEditorState } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -225,6 +225,13 @@ export const TiptapEditor = ({
     bootZennEmbedRuntime();
   }, []);
 
+
+  const isInTable = useEditorState({
+    editor,
+    selector: ({ editor: e }) =>
+      e ? e.isActive('tableCell') || e.isActive('tableHeader') : false,
+  });
+
   const applyMermaidChanges = useCallback(() => {
     if (!editor || !mermaidModal) return;
 
@@ -259,14 +266,77 @@ export const TiptapEditor = ({
     }
   }, [editor, mermaidDraft, mermaidModal]);
 
+  const tableToolbar =
+    isInTable && editor ? (
+      <div
+        className="tiptap-table-toolbar"
+        aria-label="Table actions"
+        onMouseDown={(e) => e.preventDefault()}
+      >
+          <span className="tiptap-table-toolbar__group-label">行</span>
+          <button
+            type="button"
+            title="上に行を追加"
+            onClick={() => editor.chain().focus().addRowBefore().run()}
+          >
+            ↑ 追加
+          </button>
+          <button
+            type="button"
+            title="下に行を追加"
+            onClick={() => editor.chain().focus().addRowAfter().run()}
+          >
+            ↓ 追加
+          </button>
+          <button
+            type="button"
+            title="行を削除"
+            className="tiptap-table-toolbar__btn--danger"
+            onClick={() => editor.chain().focus().deleteRow().run()}
+          >
+            削除
+          </button>
+          <span className="tiptap-table-toolbar__divider" aria-hidden="true" />
+          <span className="tiptap-table-toolbar__group-label">列</span>
+          <button
+            type="button"
+            title="左に列を追加"
+            onClick={() => editor.chain().focus().addColumnBefore().run()}
+          >
+            ← 追加
+          </button>
+          <button
+            type="button"
+            title="右に列を追加"
+            onClick={() => editor.chain().focus().addColumnAfter().run()}
+          >
+            → 追加
+          </button>
+          <button
+            type="button"
+            title="列を削除"
+            className="tiptap-table-toolbar__btn--danger"
+            onClick={() => editor.chain().focus().deleteColumn().run()}
+          >
+            削除
+          </button>
+          <span className="tiptap-table-toolbar__divider" aria-hidden="true" />
+          <button
+            type="button"
+            title="テーブルを削除"
+            className="tiptap-table-toolbar__btn--danger"
+            onClick={() => editor.chain().focus().deleteTable().run()}
+          >
+            テーブル削除
+          </button>
+        </div>
+    ) : null;
+
   return (
-    <div
-      className="tiptap-scroll-container"
-      onScroll={(e) => onScroll?.(e.currentTarget.scrollTop)}
-      style={{ overflowY: 'auto', height: '100%' }}
-    >
+    <div className="tiptap-scroll-container" onScroll={(e) => onScroll?.(e.currentTarget.scrollTop)}>
+      {tableToolbar}
       <EditorContent editor={editor} />
-      {mermaidModal && (
+        {mermaidModal && (
         <div
           className="tiptap-mermaid-modal-backdrop"
           role="presentation"
