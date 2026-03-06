@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import markdownToHtml from 'zenn-markdown-html';
 import { HeroPanel } from '../components/HeroPanel';
 import { HybridSurface } from '../components/HybridSurface';
@@ -18,6 +18,16 @@ import {
 } from '../utils/markdown';
 import { validateWithZennModel } from '../utils/zenn-model';
 import { bootZennEmbedRuntime } from '../utils/zenn-embed-runtime';
+import {
+  type BookState,
+  loadBookFromDirectory,
+  parseBookConfig,
+  serializeBookConfig,
+} from '../book/book-config';
+import { BookSidebar } from '../book/BookSidebar';
+import { BookConfigPanel } from '../book/BookConfigPanel';
+import { ChapterFrontmatterEditor } from '../book/ChapterFrontmatterEditor';
+import { TiptapEditor } from './TiptapEditor';
 
 const shouldUseExternalEmbedOrigin = () => {
   if (typeof navigator === 'undefined') {
@@ -72,6 +82,8 @@ const Tiptap = () => {
   const [isDark, setIsDark] = useState(() => {
     return localStorage.getItem('theme') !== 'light';
   });
+  const [bookState, setBookState] = useState<BookState | null>(null);
+  const [bookConfigYaml, setBookConfigYaml] = useState('');
 
   useEffect(() => {
     const theme = isDark ? 'dark' : 'light';
@@ -245,6 +257,180 @@ const Tiptap = () => {
     fileInputRef.current?.click();
   };
 
+  // ── Book mode ──────────────────────────────────────────────────────────
+
+  const CHAPTER_DEFAULT_FRONTMATTER = (num: string) =>
+    `title: "チャプター ${num}"`;
+
+  const CHAPTER_DEFAULT_BODY = `# チャプタータイトル\n\nここに本文を書きます。\n`;
+
+  const loadChapter = useCallback(
+    async (state: BookState, chapterId: string) => {
+      const chapter = state.chapters.find((c) => c.id === chapterId);
+      if (!chapter) return;
+
+      const canRead = await ensureHandlePermission(chapter.handle, 'read', true);
+      if (!canRead) {
+        setSaveStatus(`チャプター ${chapterId} の読み取り権限がありません`);
+        return;
+      }
+
+      try {
+        const file = await chapter.handle.getFile();
+        const text = await file.text();
+        const parts = splitMarkdownParts(text);
+        // Clear stale HTML so the editor doesn't init from the wrong chapter's HTML
+        setRenderedHtml('');
+        setFrontmatter(parts.frontmatter || CHAPTER_DEFAULT_FRONTMATTER(chapterId));
+        setBody(parts.body);
+        setDocumentName(chapter.name);
+        setSaveStatus(`チャプター ${chapterId} を読み込みました`);
+      } catch {
+        setSaveStatus(`チャプター ${chapterId} の読み込みに失敗しました`);
+      }
+    },
+    [],
+  );
+
+  const openBook = async () => {
+    if (bookState) {
+      // close book mode
+      setBookState(null);
+      setBookConfigYaml('');
+      loadMarkdownDocument(initialMarkdown, 'untitled.md');
+      return;
+    }
+
+    // biome-ignore lint/suspicious/noExplicitAny: File System Access API
+    const showDirectoryPicker = (window as any).showDirectoryPicker as
+      | ((options?: { mode?: string }) => Promise<FileSystemDirectoryHandle>)
+      | undefined;
+
+    if (typeof showDirectoryPicker !== 'function') {
+      setSaveStatus('お使いのブラウザはフォルダ選択に対応していません');
+      return;
+    }
+
+    try {
+      const dirHandle = await showDirectoryPicker({ mode: 'readwrite' });
+      setSaveStatus('本を読み込み中…');
+
+      const state = await loadBookFromDirectory(dirHandle);
+      const configYaml = serializeBookConfig(state.config);
+
+      setBookState(state);
+      setBookConfigYaml(configYaml);
+
+      if (state.activeView) {
+        await loadChapter(state, state.activeView);
+      } else if (state.chapters.length === 0) {
+        setSaveStatus(`📚 ${state.slug} を開きました（チャプターなし）`);
+      } else {
+        setSaveStatus(`📚 ${state.slug} を開きました`);
+      }
+    } catch (err) {
+      // Ignore user-cancel (AbortError), surface real errors
+      if (err instanceof Error && err.name !== 'AbortError') {
+        setSaveStatus(`本を開けませんでした: ${err.message}`);
+      }
+    }
+  };
+
+  const selectBookView = useCallback(
+    async (view: string | null) => {
+      if (!bookState) return;
+
+      // Save current chapter before switching
+      if (bookState.activeView) {
+        const chapter = bookState.chapters.find((c) => c.id === bookState.activeView);
+        if (chapter) {
+          try {
+            const canWrite = await ensureHandlePermission(chapter.handle, 'readwrite', true);
+            if (canWrite) {
+              const writable = await chapter.handle.createWritable();
+              await writable.write(mergeMarkdownParts({ frontmatter, body }));
+              await writable.close();
+            }
+          } catch {
+            // ignore save errors when switching
+          }
+        }
+      }
+
+      setBookState((s) => s ? { ...s, activeView: view } : s);
+
+      if (view === null) {
+        setSaveStatus('本の設定');
+        return;
+      }
+
+      await loadChapter(bookState, view);
+    },
+    [bookState, frontmatter, body, loadChapter],
+  );
+
+  const addChapter = useCallback(async () => {
+    if (!bookState) return;
+
+    const nextId = String(
+      bookState.chapters.length > 0
+        ? Math.max(...bookState.chapters.map((c) => Number(c.id))) + 1
+        : 1,
+    );
+    const name = `${nextId}.md`;
+    const content = `---\n${CHAPTER_DEFAULT_FRONTMATTER(nextId)}\n---\n\n${CHAPTER_DEFAULT_BODY}`;
+
+    try {
+      const canWrite = await ensureHandlePermission(bookState.dirHandle as unknown as FileSystemFileHandle, 'readwrite', true);
+      if (!canWrite) return;
+
+      const fileHandle = await bookState.dirHandle.getFileHandle(name, { create: true });
+      const writable = await fileHandle.createWritable();
+      await writable.write(content);
+      await writable.close();
+
+      const newChapter = {
+        id: nextId,
+        name,
+        handle: fileHandle,
+        title: `チャプター ${nextId}`,
+      };
+      const nextState = {
+        ...bookState,
+        chapters: [...bookState.chapters, newChapter],
+        activeView: nextId,
+      };
+      setBookState(nextState);
+      await loadChapter(nextState, nextId);
+    } catch {
+      setSaveStatus('チャプターの作成に失敗しました');
+    }
+  }, [bookState, loadChapter]);
+
+  const saveBookConfig = useCallback(async (yaml: string) => {
+    if (!bookState) return;
+    setBookConfigYaml(yaml);
+    // Update bookState.config so the sidebar title etc. stay in sync
+    const newConfig = parseBookConfig(yaml);
+    setBookState((s) => s ? { ...s, config: newConfig } : s);
+    try {
+      const canWrite = await ensureHandlePermission(bookState.dirHandle as unknown as FileSystemFileHandle, 'readwrite', true);
+      if (!canWrite) {
+        setSaveStatus('config.yaml への書き込み権限がありません');
+        return;
+      }
+      const handle = await bookState.dirHandle.getFileHandle('config.yaml', { create: true });
+      const writable = await handle.createWritable();
+      await writable.write(yaml);
+      await writable.close();
+      setSaveStatus('本の設定を保存しました');
+    } catch {
+      setSaveStatus('config.yaml の保存に失敗しました');
+    }
+  }, [bookState]);
+
+  // ───────────────────────────────────────────────────────────────────────
+
   const createNewDraft = () => {
     fileHandleRef.current = null;
     void clearRecentFileHandle();
@@ -286,6 +472,29 @@ const Tiptap = () => {
   };
 
   const saveDocument = async () => {
+    // Book mode: save current chapter
+    if (bookState?.activeView) {
+      const chapter = bookState.chapters.find((c) => c.id === bookState.activeView);
+      if (chapter) {
+        const canWrite = await ensureHandlePermission(chapter.handle, 'readwrite', true);
+        if (canWrite) {
+          const writable = await chapter.handle.createWritable();
+          await writable.write(mergeMarkdownParts({ frontmatter, body }));
+          await writable.close();
+          // Update chapter title in state
+          const { splitMarkdownParts: smp } = await import('../utils/markdown');
+          const parts = smp(mergeMarkdownParts({ frontmatter, body }));
+          const titleMatch = parts.frontmatter.match(/^title:\s*(.+)/m);
+          const title = titleMatch ? titleMatch[1].replace(/^"|"$/g, '').trim() : chapter.title;
+          setBookState((s) =>
+            s ? { ...s, chapters: s.chapters.map((c) => c.id === chapter.id ? { ...c, title } : c) } : s,
+          );
+          setSaveStatus(`チャプター ${chapter.id} を保存しました`);
+        }
+      }
+      return;
+    }
+
     if (modelValidation.criticalCount > 0) {
       const firstCritical = modelValidation.errors.find((error) => error.isCritical);
       const reason = firstCritical?.message || 'zenn-model critical validation errors';
@@ -318,23 +527,27 @@ const Tiptap = () => {
   const wordCount = countWords(markdown);
   const readingMinutes = Math.max(1, Math.ceil(wordCount / 220));
 
+  const activeChapter = bookState?.chapters.find((c) => c.id === bookState.activeView);
+
   return (
     <div className="app-layout">
       <HeroPanel
-        documentName={documentName}
+        documentName={bookState ? (activeChapter?.name ?? bookState.slug) : documentName}
         saveStatus={saveStatus}
-        modelStatus={modelValidation.summaryLabel}
+        modelStatus={bookState ? '' : modelValidation.summaryLabel}
         wordCount={wordCount}
         readingMinutes={readingMinutes}
         isDark={isDark}
+        isBookMode={!!bookState}
         onCreateNewDraft={createNewDraft}
         onOpenDocument={() => void openDocument()}
+        onOpenBook={() => void openBook()}
         onSaveDocument={() => void saveDocument()}
         onDownloadDocument={downloadDocument}
         onToggleTheme={() => setIsDark((d) => !d)}
       />
 
-      <main className="editor-shell">
+      <main className={`editor-shell${bookState ? ' editor-shell--book' : ''}`}>
         <input
           ref={fileInputRef}
           type="file"
@@ -342,29 +555,80 @@ const Tiptap = () => {
           hidden
           onChange={(event) => {
             const file = event.target.files?.[0];
-
-            if (file) {
-              void readFile(file);
-            }
-
+            if (file) void readFile(file);
             event.target.value = '';
           }}
         />
 
-        <HybridSurface
-          frontmatter={frontmatter}
-          body={body}
-          renderedHtml={renderedHtml}
-          isInitialHtmlReady={isInitialHtmlReady}
-          onChangeFrontmatter={(val) => {
-            setFrontmatter(val);
-            setSaveStatus('Live markdown editing');
-          }}
-          onChangeBody={(val) => {
-            setBody(stripLeadingFrontmatter(val));
-            setSaveStatus('Live markdown editing');
-          }}
-        />
+        {bookState && (
+          <BookSidebar
+            slug={bookState.slug}
+            bookTitle={bookState.config.title}
+            chapters={bookState.chapters}
+            activeView={bookState.activeView}
+            onSelectView={(view) => void selectBookView(view)}
+            onAddChapter={() => void addChapter()}
+          />
+        )}
+
+        <div className={bookState ? 'book-editor-area' : ''}>
+          {bookState && bookState.activeView === null ? (
+            <div className="panel panel--yaml">
+              <BookConfigPanel
+                configYaml={bookConfigYaml}
+                onChange={(yaml) => void saveBookConfig(yaml)}
+              />
+            </div>
+          ) : bookState && activeChapter ? (
+            <div className="workspace-column">
+              <section className="panel panel--yaml" aria-label="チャプター設定">
+                <ChapterFrontmatterEditor
+                  frontmatter={frontmatter}
+                  chapterNum={activeChapter.id}
+                  onChange={(val) => {
+                    setFrontmatter(val);
+                    setSaveStatus('編集中…');
+                  }}
+                />
+              </section>
+              <section className="panel panel--editor" aria-label="Editor">
+                {isInitialHtmlReady ? (
+                  <TiptapEditor
+                    key={activeChapter.id}
+                    id="markdown-editor"
+                    className="source-editor source-editor--fused source-editor--wysiwyg znc"
+                    ariaLabel="Markdown editor"
+                    markdown={body}
+                    initialHtml={renderedHtml}
+                    onChange={(val) => {
+                      setBody(stripLeadingFrontmatter(val));
+                      setSaveStatus('編集中…');
+                    }}
+                  />
+                ) : (
+                  <div className="editor-loading" aria-live="polite">
+                    Preparing editor...
+                  </div>
+                )}
+              </section>
+            </div>
+          ) : (
+            <HybridSurface
+              frontmatter={frontmatter}
+              body={body}
+              renderedHtml={renderedHtml}
+              isInitialHtmlReady={isInitialHtmlReady}
+              onChangeFrontmatter={(val) => {
+                setFrontmatter(val);
+                setSaveStatus('Live markdown editing');
+              }}
+              onChangeBody={(val) => {
+                setBody(stripLeadingFrontmatter(val));
+                setSaveStatus('Live markdown editing');
+              }}
+            />
+          )}
+        </div>
       </main>
     </div>
   );

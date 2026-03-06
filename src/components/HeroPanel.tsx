@@ -5,8 +5,10 @@ type HeroPanelProps = {
   wordCount: number;
   readingMinutes: number;
   isDark: boolean;
+  isBookMode: boolean;
   onCreateNewDraft: () => void;
   onOpenDocument: () => void;
+  onOpenBook: () => void;
   onSaveDocument: () => void;
   onDownloadDocument: () => void;
   onToggleTheme: () => void;
@@ -19,8 +21,10 @@ export const HeroPanel = ({
   wordCount,
   readingMinutes,
   isDark,
+  isBookMode,
   onCreateNewDraft,
   onOpenDocument,
+  onOpenBook,
   onSaveDocument,
   onDownloadDocument,
   onToggleTheme,
@@ -34,18 +38,29 @@ export const HeroPanel = ({
         role="toolbar"
         aria-label="document controls"
       >
-        <button type="button" onClick={onCreateNewDraft}>
-          New draft
-        </button>
-        <button type="button" onClick={onOpenDocument}>
+        {!isBookMode && (
+          <button type="button" onClick={onCreateNewDraft}>
+            New draft
+          </button>
+        )}
+        <button type="button" onClick={onOpenDocument} disabled={isBookMode}>
           Open .md
+        </button>
+        <button
+          type="button"
+          onClick={onOpenBook}
+          className={isBookMode ? 'top-bar__btn--active' : ''}
+        >
+          {isBookMode ? '📚 本を閉じる' : '📚 本を開く'}
         </button>
         <button type="button" onClick={onSaveDocument}>
           Save
         </button>
-        <button type="button" onClick={onDownloadDocument}>
-          Download
-        </button>
+        {!isBookMode && (
+          <button type="button" onClick={onDownloadDocument}>
+            Download
+          </button>
+        )}
         <button
           type="button"
           onClick={onToggleTheme}
