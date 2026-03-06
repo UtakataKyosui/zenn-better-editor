@@ -407,6 +407,66 @@ const Tiptap = () => {
     }
   }, [bookState, loadChapter]);
 
+  const renameChapter = useCallback(async (chapterId: string, newBaseName: string) => {
+    if (!bookState) return;
+    const chapter = bookState.chapters.find((c) => c.id === chapterId);
+    if (!chapter) return;
+
+    const newFileName = `${newBaseName}.md`;
+    if (newFileName === chapter.name) return;
+
+    try {
+      const canWrite = await ensureHandlePermission(
+        bookState.dirHandle as unknown as FileSystemFileHandle,
+        'readwrite',
+        true,
+      );
+      if (!canWrite) {
+        setSaveStatus('書き込み権限がありません');
+        return;
+      }
+
+      // Create new file and write current content
+      const content = mergeMarkdownParts({ frontmatter, body });
+      const newHandle = await bookState.dirHandle.getFileHandle(newFileName, { create: true });
+      const writable = await newHandle.createWritable();
+      await writable.write(content);
+      await writable.close();
+
+      // Delete old file
+      // biome-ignore lint/suspicious/noExplicitAny: File System Access API
+      await (bookState.dirHandle as any).removeEntry(chapter.name);
+
+      const updatedChapter = { ...chapter, id: newBaseName, name: newFileName, handle: newHandle };
+      const updatedChapters = bookState.chapters.map((c) =>
+        c.id === chapterId ? updatedChapter : c,
+      );
+
+      // Update config.yaml chapters list if slug-based
+      let updatedConfig = bookState.config;
+      if (bookState.config.chapters) {
+        const updatedSlugs = bookState.config.chapters.map((s) =>
+          s === chapterId ? newBaseName : s,
+        );
+        updatedConfig = { ...bookState.config, chapters: updatedSlugs };
+        const configYaml = serializeBookConfig(updatedConfig);
+        setBookConfigYaml(configYaml);
+        const cfgHandle = await bookState.dirHandle.getFileHandle('config.yaml', { create: true });
+        const cfgWritable = await cfgHandle.createWritable();
+        await cfgWritable.write(configYaml);
+        await cfgWritable.close();
+      }
+
+      setDocumentName(newFileName);
+      setBookState((s) =>
+        s ? { ...s, chapters: updatedChapters, activeView: newBaseName, config: updatedConfig } : s,
+      );
+      setSaveStatus(`${chapter.name} → ${newFileName} にリネームしました`);
+    } catch {
+      setSaveStatus('ファイルのリネームに失敗しました');
+    }
+  }, [bookState, frontmatter, body]);
+
   const saveBookConfig = useCallback(async (yaml: string) => {
     if (!bookState) return;
     setBookConfigYaml(yaml);
@@ -585,10 +645,12 @@ const Tiptap = () => {
                 <ChapterFrontmatterEditor
                   frontmatter={frontmatter}
                   chapterNum={activeChapter.id}
+                  fileName={activeChapter.name.replace(/\.md$/i, '')}
                   onChange={(val) => {
                     setFrontmatter(val);
                     setSaveStatus('編集中…');
                   }}
+                  onRenameFile={(newBase) => void renameChapter(activeChapter.id, newBase)}
                 />
               </section>
               <section className="panel panel--editor" aria-label="Editor">

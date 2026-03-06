@@ -1882,6 +1882,51 @@ html[data-theme='light'] body {
   background: #edf2f7;
 }
 
+.chapter-frontmatter-editor__filename-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 400px;
+  width: 100%;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+  padding-bottom: 2px;
+}
+
+.chapter-frontmatter-editor__filename-row:focus-within {
+  border-bottom-color: rgba(125, 211, 252, 0.4);
+}
+
+.chapter-frontmatter-editor__filename {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 0.8rem;
+  font-family: 'IBM Plex Mono', monospace;
+  color: rgba(148, 163, 184, 0.75);
+  padding: 2px 0;
+  min-width: 0;
+}
+
+.chapter-frontmatter-editor__filename:focus {
+  color: #e2e8f0;
+}
+
+[data-theme='light'] .chapter-frontmatter-editor__filename {
+  color: #64748b;
+}
+
+[data-theme='light'] .chapter-frontmatter-editor__filename:focus {
+  color: #0f172a;
+}
+
+.chapter-frontmatter-editor__filename-ext {
+  font-size: 0.8rem;
+  font-family: 'IBM Plex Mono', monospace;
+  color: rgba(148, 163, 184, 0.4);
+  flex-shrink: 0;
+}
+
 .chapter-frontmatter-editor__num {
   font-size: 0.72rem;
   font-weight: 700;

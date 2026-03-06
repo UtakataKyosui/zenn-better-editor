@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 type ChapterFrontmatter = {
   title: string;
@@ -34,16 +34,33 @@ const serializeFrontmatter = (data: ChapterFrontmatter): string => {
 type Props = {
   frontmatter: string;
   chapterNum: string;
+  fileName: string;
   onChange: (frontmatter: string) => void;
+  onRenameFile: (newBaseName: string) => void;
 };
 
-export const ChapterFrontmatterEditor = ({ frontmatter, chapterNum, onChange }: Props) => {
+export const ChapterFrontmatterEditor = ({ frontmatter, chapterNum, fileName, onChange, onRenameFile }: Props) => {
   const data = parseFrontmatter(frontmatter);
   const titleRef = useRef<HTMLInputElement>(null);
+  const [fileNameDraft, setFileNameDraft] = useState(fileName);
+
+  // Reset draft when switching chapters
+  useEffect(() => {
+    setFileNameDraft(fileName);
+  }, [fileName]);
 
   useEffect(() => {
     titleRef.current?.focus();
   }, [chapterNum]);
+
+  const commitRename = () => {
+    const trimmed = fileNameDraft.trim().replace(/\.md$/i, '');
+    if (trimmed && trimmed !== fileName) {
+      onRenameFile(trimmed);
+    } else {
+      setFileNameDraft(fileName);
+    }
+  };
 
   const update = useCallback(
     (patch: Partial<ChapterFrontmatter>) => {
@@ -54,7 +71,22 @@ export const ChapterFrontmatterEditor = ({ frontmatter, chapterNum, onChange }: 
 
   return (
     <div className="chapter-frontmatter-editor" aria-label="チャプター設定">
-      <div className="chapter-frontmatter-editor__num">チャプター {chapterNum}</div>
+      <div className="chapter-frontmatter-editor__filename-row">
+        <input
+          type="text"
+          className="chapter-frontmatter-editor__filename"
+          value={fileNameDraft}
+          onChange={(e) => setFileNameDraft(e.target.value)}
+          onBlur={commitRename}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') e.currentTarget.blur();
+            else if (e.key === 'Escape') setFileNameDraft(fileName);
+          }}
+          aria-label="ファイル名"
+          spellCheck={false}
+        />
+        <span className="chapter-frontmatter-editor__filename-ext">.md</span>
+      </div>
       <input
         ref={titleRef}
         type="text"
