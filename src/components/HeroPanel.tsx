@@ -28,8 +28,6 @@ export const HeroPanel = ({
       <p className="hero-copy">
         YAML Frontmatter
         を管理しつつ、本文はプレビューの見た目のまま直接編集できます。
-        必要なときだけ Split View に切り替えて、read-only
-        の最終レンダリングを確認できます。
       </p>
       <div className="file-strip" role="toolbar" aria-label="document controls">
         <button type="button" onClick={onCreateNewDraft}>
