@@ -69,6 +69,15 @@ const Tiptap = () => {
   );
   const [documentName, setDocumentName] = useState('untitled.md');
   const [saveStatus, setSaveStatus] = useState('Live markdown editing');
+  const [isDark, setIsDark] = useState(() => {
+    return localStorage.getItem('theme') !== 'light';
+  });
+
+  useEffect(() => {
+    const theme = isDark ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [isDark]);
   const fileHandleRef = useRef<FileSystemFileHandle | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const hasInitialHtmlResolvedRef = useRef(!shouldDeferInitialRender);
@@ -317,10 +326,12 @@ const Tiptap = () => {
         modelStatus={modelValidation.summaryLabel}
         wordCount={wordCount}
         readingMinutes={readingMinutes}
+        isDark={isDark}
         onCreateNewDraft={createNewDraft}
         onOpenDocument={() => void openDocument()}
         onSaveDocument={() => void saveDocument()}
         onDownloadDocument={downloadDocument}
+        onToggleTheme={() => setIsDark((d) => !d)}
       />
 
       <main className="editor-shell">

@@ -4,10 +4,12 @@ type HeroPanelProps = {
   modelStatus: string;
   wordCount: number;
   readingMinutes: number;
+  isDark: boolean;
   onCreateNewDraft: () => void;
   onOpenDocument: () => void;
   onSaveDocument: () => void;
   onDownloadDocument: () => void;
+  onToggleTheme: () => void;
 };
 
 export const HeroPanel = ({
@@ -16,10 +18,12 @@ export const HeroPanel = ({
   modelStatus,
   wordCount,
   readingMinutes,
+  isDark,
   onCreateNewDraft,
   onOpenDocument,
   onSaveDocument,
   onDownloadDocument,
+  onToggleTheme,
 }: HeroPanelProps) => {
   return (
     <header className="top-bar">
@@ -41,6 +45,14 @@ export const HeroPanel = ({
         </button>
         <button type="button" onClick={onDownloadDocument}>
           Download
+        </button>
+        <button
+          type="button"
+          onClick={onToggleTheme}
+          aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          className="top-bar__theme-toggle"
+        >
+          {isDark ? '☀️' : '🌙'}
         </button>
       </nav>
 
