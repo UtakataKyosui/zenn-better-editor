@@ -43,11 +43,18 @@ interface FileSystemFileHandle {
   createWritable(): Promise<FileSystemWritableFileStream>;
 }
 
+interface DirectoryPickerOptions {
+  mode?: 'read' | 'readwrite';
+}
+
 interface FileSystemDirectoryHandle {
+  readonly kind: 'directory';
+  readonly name: string;
   getFileHandle(
     name: string,
     options?: FileSystemGetFileOptions,
   ): Promise<FileSystemFileHandle>;
+  entries(): AsyncIterableIterator<[string, FileSystemFileHandle | FileSystemDirectoryHandle]>;
 }
 
 interface StorageManager {
@@ -61,4 +68,7 @@ interface Window {
   showSaveFilePicker?: (
     options?: SaveFilePickerOptions,
   ) => Promise<FileSystemFileHandle>;
+  showDirectoryPicker?: (
+    options?: DirectoryPickerOptions,
+  ) => Promise<FileSystemDirectoryHandle>;
 }

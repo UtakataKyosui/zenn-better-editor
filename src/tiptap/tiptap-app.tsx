@@ -1,13 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import markdownToHtml from 'zenn-markdown-html';
+import { ArticlesSidebar } from '../components/ArticlesSidebar';
 import { HeroPanel } from '../components/HeroPanel';
 import { HybridSurface } from '../components/HybridSurface';
 import { INITIAL_MARKDOWN, MARKDOWN_FILE_TYPES } from '../constants/editor';
-import { serializeFrontmatter } from '../frontmatter/frontmatter';
+import {
+  parseFrontmatter,
+  serializeFrontmatter,
+} from '../frontmatter/frontmatter';
 import {
   clearRecentFileHandle,
   ensureHandlePermission,
+  listMarkdownFiles,
+  loadRecentDirectoryHandle,
   loadRecentFileHandle,
+  openArticlesDirectory,
+  readFileFromDirectory,
+  saveFileToDirectory,
+  saveRecentDirectoryHandle,
   saveRecentFileHandle,
 } from '../utils/file-system';
 import {
@@ -72,6 +82,12 @@ const Tiptap = () => {
   const [isDark, setIsDark] = useState(() => {
     return localStorage.getItem('theme') !== 'light';
   });
+
+  // ── Articles sidebar state ──
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [articleFiles, setArticleFiles] = useState<string[]>([]);
+  const [activeArticle, setActiveArticle] = useState<string | null>(null);
+  const dirHandleRef = useRef<FileSystemDirectoryHandle | null>(null);
 
   useEffect(() => {
     const theme = isDark ? 'dark' : 'light';
@@ -149,6 +165,33 @@ const Tiptap = () => {
           return;
         }
         setSaveStatus(`Failed to load ${rememberedHandle.name}`);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Restore remembered directory handle on mount
+  useEffect(() => {
+    let isMounted = true;
+
+    void (async () => {
+      const rememberedDir = await loadRecentDirectoryHandle();
+      if (!isMounted || !rememberedDir) {
+        return;
+      }
+
+      dirHandleRef.current = rememberedDir;
+
+      try {
+        const files = await listMarkdownFiles(rememberedDir);
+        if (!isMounted) return;
+        setArticleFiles(files);
+        setSidebarOpen(true);
+      } catch {
+        // permission not yet granted - that's ok
       }
     })();
 
@@ -253,8 +296,45 @@ const Tiptap = () => {
 
   const createNewDraft = () => {
     fileHandleRef.current = null;
+    setActiveArticle(null);
     void clearRecentFileHandle();
     loadMarkdownDocument(initialMarkdown, 'untitled.md');
+  };
+
+  // ── Directory sidebar handlers ──
+  const handleOpenDirectory = async () => {
+    const dirHandle = await openArticlesDirectory();
+    if (!dirHandle) return;
+
+    dirHandleRef.current = dirHandle;
+    await saveRecentDirectoryHandle(dirHandle);
+    const files = await listMarkdownFiles(dirHandle);
+    setArticleFiles(files);
+    setSidebarOpen(true);
+    setActiveArticle(null);
+  };
+
+  const handleRefreshFiles = async () => {
+    if (!dirHandleRef.current) return;
+    const files = await listMarkdownFiles(dirHandleRef.current);
+    setArticleFiles(files);
+  };
+
+  const handleSelectFile = async (fileName: string) => {
+    if (!dirHandleRef.current) return;
+
+    const content = await readFileFromDirectory(
+      dirHandleRef.current,
+      fileName,
+    );
+    if (content === null) {
+      setSaveStatus(`Failed to read ${fileName}`);
+      return;
+    }
+
+    fileHandleRef.current = null;
+    setActiveArticle(fileName);
+    loadMarkdownDocument(content, fileName);
   };
 
   const downloadDocument = () => {
@@ -302,8 +382,35 @@ const Tiptap = () => {
       return;
     }
 
+    // Guard: confirm before overwriting a published article
+    const parsed = parseFrontmatter(frontmatter);
+    if (parsed.published) {
+      const confirmed = window.confirm(
+        `「${parsed.title || documentName}」は公開済みの記事です。\n保存すると公開内容が更新されます。続行しますか？`,
+      );
+      if (!confirmed) {
+        setSaveStatus('Save cancelled');
+        return;
+      }
+    }
+
     if (fileHandleRef.current) {
       await saveToHandle(fileHandleRef.current);
+      return;
+    }
+
+    // Save to directory file if opened from sidebar
+    if (dirHandleRef.current && activeArticle) {
+      const saved = await saveFileToDirectory(
+        dirHandleRef.current,
+        activeArticle,
+        markdown,
+      );
+      if (saved) {
+        setSaveStatus(`Saved ${activeArticle}`);
+      } else {
+        setSaveStatus(`Failed to save ${activeArticle}`);
+      }
       return;
     }
 
@@ -343,38 +450,51 @@ const Tiptap = () => {
         onToggleTheme={() => setIsDark((d) => !d)}
       />
 
-      <main className="editor-shell">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".md,text/markdown,text/plain"
-          hidden
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-
-            if (file) {
-              void readFile(file);
-            }
-
-            event.target.value = '';
-          }}
+      <div className="app-body">
+        <ArticlesSidebar
+          isOpen={sidebarOpen}
+          files={articleFiles}
+          activeFile={activeArticle}
+          directoryName={dirHandleRef.current?.name ?? null}
+          onToggle={() => setSidebarOpen((o) => !o)}
+          onOpenDirectory={() => void handleOpenDirectory()}
+          onRefresh={() => void handleRefreshFiles()}
+          onSelectFile={(f) => void handleSelectFile(f)}
         />
 
-        <HybridSurface
-          frontmatter={frontmatter}
-          body={body}
-          renderedHtml={renderedHtml}
-          isInitialHtmlReady={isInitialHtmlReady}
-          onChangeFrontmatter={(val) => {
-            setFrontmatter(val);
-            setSaveStatus('Live markdown editing');
-          }}
-          onChangeBody={(val) => {
-            setBody(stripLeadingFrontmatter(val));
-            setSaveStatus('Live markdown editing');
-          }}
-        />
-      </main>
+        <main className="editor-shell">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".md,text/markdown,text/plain"
+            hidden
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+
+              if (file) {
+                void readFile(file);
+              }
+
+              event.target.value = '';
+            }}
+          />
+
+          <HybridSurface
+            frontmatter={frontmatter}
+            body={body}
+            renderedHtml={renderedHtml}
+            isInitialHtmlReady={isInitialHtmlReady}
+            onChangeFrontmatter={(val) => {
+              setFrontmatter(val);
+              setSaveStatus('Live markdown editing');
+            }}
+            onChangeBody={(val) => {
+              setBody(stripLeadingFrontmatter(val));
+              setSaveStatus('Live markdown editing');
+            }}
+          />
+        </main>
+      </div>
     </div>
   );
 };
