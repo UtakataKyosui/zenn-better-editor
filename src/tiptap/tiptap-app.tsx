@@ -291,11 +291,9 @@ const Tiptap = () => {
   };
 
   const handleCreateNewArticle = useCallback(
-    async (fm: ZennFrontmatter) => {
+    async (slug: string, fm: ZennFrontmatter) => {
       if (!dirHandleRef.current) return;
 
-      // Generate a random slug for Zenn articles
-      const slug = crypto.randomUUID().slice(0, 20).replace(/-/g, '');
       const fileName = `${slug}.md`;
 
       const defaultContent = `---\n${serializeFrontmatter(fm)}\n---\n\n`;
@@ -459,7 +457,7 @@ const Tiptap = () => {
       <NewArticleModal
         open={newArticleModalOpen}
         onOpenChange={setNewArticleModalOpen}
-        onSubmit={(fm) => void handleCreateNewArticle(fm)}
+        onSubmit={(slug, fm) => void handleCreateNewArticle(slug, fm)}
       />
     </div>
   );

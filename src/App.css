@@ -540,8 +540,16 @@ button {
   color: rgba(148, 163, 184, 0.5);
 }
 
+.new-article-modal__hint--error {
+  color: #f87171;
+}
+
 [data-theme="light"] .new-article-modal__hint {
   color: rgba(71, 85, 105, 0.6);
+}
+
+[data-theme="light"] .new-article-modal__hint--error {
+  color: #dc2626;
 }
 
 .top-bar {

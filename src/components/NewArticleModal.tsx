@@ -14,22 +14,36 @@ import type { ZennFrontmatter } from '../frontmatter/frontmatter';
 type NewArticleModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (frontmatter: ZennFrontmatter) => void;
+  onSubmit: (slug: string, frontmatter: ZennFrontmatter) => void;
 };
 
-const EMOJI_PRESETS = ['📝', '🚀', '💡', '🔥', '⚡', '🎉', '🛠️', '📦', '🧪', '📖', '🎨', '🔒'];
+const EMOJI_PRESETS = [
+  '📝', '🚀', '💡', '🔥', '⚡', '🎉', '🛠️', '📦', '🧪', '📖',
+  '🎨', '🔒', '🌐', '🤖', '📊', '🗂️', '💻', '🔧', '📱', '🧩',
+  '⚙️', '🏗️', '✅', '🐛', '📚', '💬', '🎯', '🪄', '🔍', '🧠',
+];
+
+const generateSlug = () =>
+  crypto.randomUUID().slice(0, 20).replace(/-/g, '');
+
+const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export const NewArticleModal = ({
   open,
   onOpenChange,
   onSubmit,
 }: NewArticleModalProps) => {
+  const [slug, setSlug] = useState(generateSlug);
   const [title, setTitle] = useState('');
   const [emoji, setEmoji] = useState('📝');
   const [type, setType] = useState<'tech' | 'idea'>('tech');
   const [topicsInput, setTopicsInput] = useState('');
 
+  const isSlugValid =
+    slug.length >= 12 && slug.length <= 50 && SLUG_PATTERN.test(slug);
+
   const resetForm = () => {
+    setSlug(generateSlug());
     setTitle('');
     setEmoji('📝');
     setType('tech');
@@ -44,7 +58,7 @@ export const NewArticleModal = ({
       .map((t) => t.trim())
       .filter(Boolean);
 
-    onSubmit({
+    onSubmit(slug, {
       title,
       emoji,
       type,
@@ -73,6 +87,28 @@ export const NewArticleModal = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="new-article-modal__form">
+          {/* Slug */}
+          <div className="new-article-modal__field">
+            <label
+              htmlFor="new-article-slug"
+              className="new-article-modal__label"
+            >
+              スラグ（ファイル名）
+            </label>
+            <Input
+              id="new-article-slug"
+              value={slug}
+              onChange={(event) => setSlug(event.target.value.toLowerCase())}
+              placeholder="my-article-slug"
+              autoFocus
+            />
+            <span className={`new-article-modal__hint ${!isSlugValid && slug.length > 0 ? 'new-article-modal__hint--error' : ''}`}>
+              {!isSlugValid && slug.length > 0
+                ? '半角英数字とハイフンのみ。12〜50文字'
+                : 'a-z, 0-9, ハイフンのみ使用可。12〜50文字'}
+            </span>
+          </div>
+
           {/* Title */}
           <div className="new-article-modal__field">
             <label
@@ -86,7 +122,6 @@ export const NewArticleModal = ({
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               placeholder="記事のタイトルを入力"
-              autoFocus
             />
           </div>
 
@@ -165,7 +200,7 @@ export const NewArticleModal = ({
             >
               キャンセル
             </Button>
-            <Button type="submit">
+            <Button type="submit" disabled={!isSlugValid}>
               作成
             </Button>
           </DialogFooter>
