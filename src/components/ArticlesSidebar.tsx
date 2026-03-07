@@ -68,6 +68,20 @@ export const ArticlesSidebar = ({
                   variant="ghost"
                   size="sm"
                   className="articles-sidebar__btn"
+                  onClick={onOpenDirectory}
+                  aria-label="フォルダを開く"
+                >
+                  <FolderOpen size={14} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">フォルダを開く</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="articles-sidebar__btn"
                   onClick={onCreateNewArticle}
                   disabled={!directoryName}
                   aria-label="新規記事を作成"
