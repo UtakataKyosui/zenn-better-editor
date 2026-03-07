@@ -28,7 +28,10 @@ const unquote = (value: string): string => {
 const parseTopicsInline = (value: string): string[] => {
   const inner = value.replace(/^\[/, '').replace(/\]$/, '').trim();
   if (!inner) return [];
-  return inner.split(',').map((t) => unquote(t.trim())).filter(Boolean);
+  return inner
+    .split(',')
+    .map((t) => unquote(t.trim()))
+    .filter(Boolean);
 };
 
 export const parseFrontmatter = (yaml: string): ZennFrontmatter => {

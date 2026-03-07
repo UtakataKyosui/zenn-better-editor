@@ -60,7 +60,10 @@ export const zennContainerPlugin = (md: MarkdownIt) => {
 
       if (containerType === 'message') {
         tokenOpen.tag = 'aside';
-        tokenOpen.attrSet('class', param === 'alert' ? 'msg alert' : 'msg message');
+        tokenOpen.attrSet(
+          'class',
+          param === 'alert' ? 'msg alert' : 'msg message',
+        );
         tokenOpen.attrSet('data-variant', param === 'alert' ? 'alert' : 'info');
       } else if (containerType === 'details') {
         // We'll emit <details> with a <summary>

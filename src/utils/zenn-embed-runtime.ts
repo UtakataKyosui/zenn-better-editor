@@ -116,7 +116,8 @@ export const initializeZennEmbedBridge = () => {
   const observer = new MutationObserver((mutations) => {
     const themeChanged = mutations.some(
       (mutation) =>
-        mutation.type === 'attributes' && mutation.attributeName === 'data-theme',
+        mutation.type === 'attributes' &&
+        mutation.attributeName === 'data-theme',
     );
     if (themeChanged) {
       postThemeMessageToAllIframes();

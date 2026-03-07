@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import {
-  type ZennFrontmatter,
-  parseFrontmatter,
-  serializeFrontmatter,
-} from './frontmatter';
 import { BadgeSelector } from './BadgeSelector';
 import { EmojiPicker } from './EmojiPicker';
+import {
+  parseFrontmatter,
+  serializeFrontmatter,
+  type ZennFrontmatter,
+} from './frontmatter';
 import { TopicTagInput } from './TopicTagInput';
 
 type FrontmatterEditorProps = {

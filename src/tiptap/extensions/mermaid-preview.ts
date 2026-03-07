@@ -172,7 +172,9 @@ export const MermaidPreview = Extension.create<MermaidPreviewOptions>({
 
   addProseMirrorPlugins() {
     const pluginKey = new PluginKey<DecorationSet>('mermaid-preview');
-    const languages = new Set(this.options.languages.map((lang) => lang.toLowerCase()));
+    const languages = new Set(
+      this.options.languages.map((lang) => lang.toLowerCase()),
+    );
 
     return [
       new Plugin<DecorationSet>({

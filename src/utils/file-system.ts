@@ -7,12 +7,18 @@ type FileHandlePermission = {
 };
 
 type FileHandleWithPermission = FileSystemFileHandle & {
-  queryPermission?: (permission?: FileHandlePermission) => Promise<PermissionState>;
-  requestPermission?: (permission?: FileHandlePermission) => Promise<PermissionState>;
+  queryPermission?: (
+    permission?: FileHandlePermission,
+  ) => Promise<PermissionState>;
+  requestPermission?: (
+    permission?: FileHandlePermission,
+  ) => Promise<PermissionState>;
 };
 
 const hasIndexedDb = () => {
-  return typeof window !== 'undefined' && typeof window.indexedDB !== 'undefined';
+  return (
+    typeof window !== 'undefined' && typeof window.indexedDB !== 'undefined'
+  );
 };
 
 const openHandleDatabase = async (): Promise<IDBDatabase | null> => {
@@ -56,30 +62,31 @@ const isFileHandle = (value: unknown): value is FileSystemFileHandle => {
   return 'getFile' in value;
 };
 
-export const loadRecentFileHandle = async (): Promise<FileSystemFileHandle | null> => {
-  const database = await openHandleDatabase();
-  if (!database) {
-    return null;
-  }
+export const loadRecentFileHandle =
+  async (): Promise<FileSystemFileHandle | null> => {
+    const database = await openHandleDatabase();
+    if (!database) {
+      return null;
+    }
 
-  try {
-    const transaction = database.transaction(HANDLE_STORE_NAME, 'readonly');
-    const store = transaction.objectStore(HANDLE_STORE_NAME);
-    const request = store.get(LAST_FILE_HANDLE_KEY);
+    try {
+      const transaction = database.transaction(HANDLE_STORE_NAME, 'readonly');
+      const store = transaction.objectStore(HANDLE_STORE_NAME);
+      const request = store.get(LAST_FILE_HANDLE_KEY);
 
-    const handle = await new Promise<unknown>((resolve) => {
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => resolve(null);
-    });
+      const handle = await new Promise<unknown>((resolve) => {
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => resolve(null);
+      });
 
-    await waitForTransaction(transaction);
-    return isFileHandle(handle) ? handle : null;
-  } catch {
-    return null;
-  } finally {
-    database.close();
-  }
-};
+      await waitForTransaction(transaction);
+      return isFileHandle(handle) ? handle : null;
+    } catch {
+      return null;
+    } finally {
+      database.close();
+    }
+  };
 
 export const saveRecentFileHandle = async (handle: FileSystemFileHandle) => {
   const database = await openHandleDatabase();
@@ -131,7 +138,10 @@ export const ensureHandlePermission = async (
         return true;
       }
 
-      if (!requestIfNeeded || typeof permissionHandle.requestPermission !== 'function') {
+      if (
+        !requestIfNeeded ||
+        typeof permissionHandle.requestPermission !== 'function'
+      ) {
         return false;
       }
 

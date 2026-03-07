@@ -34,6 +34,8 @@ test('parses linked zenn image markdown', () => {
 test('returns null for non-image paragraph content', () => {
   expect(parseZennImageInsertionLine('これは普通の段落です')).toBeNull();
   expect(
-    parseZennImageInsertionLine('画像 ![](https://example.com/foo.png) を含む文'),
+    parseZennImageInsertionLine(
+      '画像 ![](https://example.com/foo.png) を含む文',
+    ),
   ).toBeNull();
 });

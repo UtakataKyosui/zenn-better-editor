@@ -64,7 +64,9 @@ export const countExpectedZennSyntax = (markdown: string): ZennSyntaxCounts => {
   return counts;
 };
 
-export const countActualZennSyntax = (doc: ProseMirrorNode): ZennSyntaxCounts => {
+export const countActualZennSyntax = (
+  doc: ProseMirrorNode,
+): ZennSyntaxCounts => {
   const counts = createCounts();
 
   doc.descendants((node) => {

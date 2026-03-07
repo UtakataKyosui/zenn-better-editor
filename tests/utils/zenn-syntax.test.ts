@@ -62,9 +62,7 @@ test('detects unresolved zenn syntax by comparing expected and actual node count
     descendants: () => {},
   } as Parameters<typeof hasUnresolvedZennSyntax>[1];
   const resolvedDoc = {
-    descendants: (
-      callback: (node: { type: { name: string } }) => void,
-    ) => {
+    descendants: (callback: (node: { type: { name: string } }) => void) => {
       callback({ type: { name: 'zennMessage' } });
       callback({ type: { name: 'zennEmbedBlock' } });
     },

@@ -1,3 +1,10 @@
+import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+
 type HeroPanelProps = {
   documentName: string;
   saveStatus: string;
@@ -34,26 +41,36 @@ export const HeroPanel = ({
         role="toolbar"
         aria-label="document controls"
       >
-        <button type="button" onClick={onCreateNewDraft}>
+        <Button variant="outline" size="sm" onClick={onCreateNewDraft}>
           New draft
-        </button>
-        <button type="button" onClick={onOpenDocument}>
+        </Button>
+        <Button variant="outline" size="sm" onClick={onOpenDocument}>
           Open .md
-        </button>
-        <button type="button" onClick={onSaveDocument}>
+        </Button>
+        <Button variant="outline" size="sm" onClick={onSaveDocument}>
           Save
-        </button>
-        <button type="button" onClick={onDownloadDocument}>
+        </Button>
+        <Button variant="outline" size="sm" onClick={onDownloadDocument}>
           Download
-        </button>
-        <button
-          type="button"
-          onClick={onToggleTheme}
-          aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-          className="top-bar__theme-toggle"
-        >
-          {isDark ? '☀️' : '🌙'}
-        </button>
+        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggleTheme}
+              aria-label={
+                isDark ? 'Switch to light mode' : 'Switch to dark mode'
+              }
+              className="top-bar__theme-toggle"
+            >
+              {isDark ? '☀️' : '🌙'}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {isDark ? 'ライトモードに切り替え' : 'ダークモードに切り替え'}
+          </TooltipContent>
+        </Tooltip>
       </nav>
 
       <span className="top-bar__doc-name">{documentName}</span>

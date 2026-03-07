@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { pluginReact } from '@rsbuild/plugin-react';
 import { defineConfig } from '@rstest/core';
 
@@ -8,6 +9,7 @@ export default defineConfig({
   setupFiles: ['./tests/rstest.setup.ts'],
   resolve: {
     alias: {
+      '@': path.resolve(__dirname, 'src'),
       katex: 'katex/dist/katex.js',
     },
   },

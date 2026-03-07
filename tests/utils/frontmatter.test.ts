@@ -1,8 +1,8 @@
 import { describe, expect, it } from '@rstest/core';
 import {
-  type ZennFrontmatter,
   parseFrontmatter,
   serializeFrontmatter,
+  type ZennFrontmatter,
 } from '../../src/utils/frontmatter';
 
 describe('parseFrontmatter', () => {

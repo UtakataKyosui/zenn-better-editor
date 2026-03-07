@@ -1,4 +1,4 @@
-import { Node, mergeAttributes } from '@tiptap/core';
+import { mergeAttributes, Node } from '@tiptap/core';
 
 const CONTAINER_OPEN_PATTERN = /^:::(message|details)(?:\s+.*)?$/;
 const CONTAINER_CLOSE_PATTERN = /^:::\s*$/;
@@ -36,7 +36,9 @@ const parseContainerBlocks = (
       if (level === 0) {
         const rawEnd = hasNewline ? lineEnd + 1 : lineEnd;
         const raw = src.slice(0, rawEnd);
-        const rawContent = src.slice(openingRaw.length, cursor).replace(/\n$/, '');
+        const rawContent = src
+          .slice(openingRaw.length, cursor)
+          .replace(/\n$/, '');
         const tokens = rawContent ? lexer.blockTokens(rawContent) : [];
 
         tokens.forEach((token: { text?: string; tokens?: unknown[] }) => {
@@ -99,10 +101,7 @@ export const ZennMessage = Node.create({
   },
 
   parseHTML() {
-    return [
-      { tag: 'div.zenn-message' },
-      { tag: 'aside.msg' },
-    ];
+    return [{ tag: 'div.zenn-message' }, { tag: 'aside.msg' }];
   },
 
   markdownTokenizer: {
@@ -135,7 +134,9 @@ export const ZennMessage = Node.create({
       {
         variant: token.attributes?.variant || 'info',
       },
-      children.length > 0 ? children : [helpers.createNode('paragraph', {}, [])],
+      children.length > 0
+        ? children
+        : [helpers.createNode('paragraph', {}, [])],
     );
   },
 
@@ -257,7 +258,9 @@ export const ZennDetails = Node.create({
         summary: token.attributes?.summary || 'Details',
         open: Boolean(token.attributes?.open),
       },
-      children.length > 0 ? children : [helpers.createNode('paragraph', {}, [])],
+      children.length > 0
+        ? children
+        : [helpers.createNode('paragraph', {}, [])],
     );
   },
 
@@ -304,7 +307,9 @@ export const ZennDetails = Node.create({
         const currentNode = editor.state.doc.nodeAt(pos);
         if (!currentNode || currentNode.type.name !== this.name) return;
         const normalizedSummary = nextSummary.trim() || 'Details';
-        if (String(currentNode.attrs.summary || 'Details') === normalizedSummary) {
+        if (
+          String(currentNode.attrs.summary || 'Details') === normalizedSummary
+        ) {
           return;
         }
 
@@ -391,7 +396,10 @@ export const ZennDetails = Node.create({
           summary.removeEventListener('click', handleSummaryToggle);
           summary.removeEventListener('keydown', handleSummaryKeyDown);
           summaryInput.removeEventListener('blur', handleSummaryInputBlur);
-          summaryInput.removeEventListener('keydown', handleSummaryInputKeyDown);
+          summaryInput.removeEventListener(
+            'keydown',
+            handleSummaryInputKeyDown,
+          );
           summaryInput.removeEventListener('click', handleSummaryInputClick);
         },
       };
@@ -400,7 +408,8 @@ export const ZennDetails = Node.create({
 
   // biome-ignore lint/suspicious/noExplicitAny: Markdown node/helper types are dynamic
   renderMarkdown: (node: any, helpers: any) => {
-    const summary = String(node.attrs?.summary || 'Details').trim() || 'Details';
+    const summary =
+      String(node.attrs?.summary || 'Details').trim() || 'Details';
     const content = helpers.renderChildren(node.content || [], '\n\n');
     const body = content ? `${content}\n` : '';
     return `:::details ${summary}\n${body}:::\n`;

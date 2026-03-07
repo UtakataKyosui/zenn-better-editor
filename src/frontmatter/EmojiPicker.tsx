@@ -602,7 +602,11 @@ type EmojiPickerProps = {
   triggerClassName?: string;
 };
 
-export const EmojiPicker = ({ value, onChange, triggerClassName }: EmojiPickerProps) => {
+export const EmojiPicker = ({
+  value,
+  onChange,
+  triggerClassName,
+}: EmojiPickerProps) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({});
@@ -627,10 +631,7 @@ export const EmojiPicker = ({ value, onChange, triggerClassName }: EmojiPickerPr
     top = Math.min(top, window.innerHeight - popoverHeight - margin);
     top = Math.max(top, margin);
 
-    const left = Math.min(
-      rect.left,
-      window.innerWidth - popoverWidth - margin,
-    );
+    const left = Math.min(rect.left, window.innerWidth - popoverWidth - margin);
 
     setPopoverStyle({ top, left });
   };

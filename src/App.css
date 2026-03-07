@@ -1,18 +1,137 @@
-@import 'tailwindcss';
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 @plugin "@tailwindcss/typography";
-@import 'zenn-content-css/lib/index.css';
-@import 'katex/dist/katex.min.css';
+@import "zenn-content-css/lib/index.css";
+@import "katex/dist/katex.min.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
 
 :root {
+  --radius: 0.625rem;
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+
   color: #e8ecf3;
   background:
-    radial-gradient(circle at top right, rgba(73, 109, 255, 0.18), transparent 34%),
-    radial-gradient(circle at top left, rgba(38, 208, 124, 0.16), transparent 28%),
-    linear-gradient(180deg, #08111f 0%, #101a30 52%, #0b1322 100%);
-  font-family:
-    'IBM Plex Sans',
-    'Noto Sans JP',
-    sans-serif;
+    radial-gradient(
+      circle at top right,
+      rgba(73, 109, 255, 0.18),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at top left,
+      rgba(38, 208, 124, 0.16),
+      transparent 28%
+    ), linear-gradient(180deg, #08111f 0%, #101a30 52%, #0b1322 100%);
+  font-family: "IBM Plex Sans", "Noto Sans JP", sans-serif;
+}
+
+.light {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
 }
 
 * {
@@ -63,7 +182,7 @@ button {
 }
 
 .top-bar__brand {
-  font-family: 'Space Grotesk', 'IBM Plex Sans', sans-serif;
+  font-family: "Space Grotesk", "IBM Plex Sans", sans-serif;
   font-weight: 700;
   font-size: 0.95rem;
   color: #7dd3fc;
@@ -153,10 +272,7 @@ button {
 
 .panel .panel-header h2 {
   margin: 8px 0 0;
-  font-family:
-    'Space Grotesk',
-    'IBM Plex Sans',
-    sans-serif;
+  font-family: "Space Grotesk", "IBM Plex Sans", sans-serif;
   font-weight: 700;
   line-height: 1.1;
   font-size: 1.1rem;
@@ -193,7 +309,6 @@ button {
 .preview-panel {
   margin-top: 20px;
 }
-
 
 .panel-header,
 .source-actions,
@@ -247,7 +362,6 @@ button {
   border-color: rgba(56, 189, 248, 0.5);
   background: rgba(14, 116, 144, 0.28);
 }
-
 
 .visual-canvas {
   display: grid;
@@ -354,10 +468,7 @@ button {
 .visual-textarea--code {
   min-height: 160px;
   color: #f8fafc;
-  font-family:
-    'IBM Plex Mono',
-    'JetBrains Mono',
-    monospace;
+  font-family: "IBM Plex Mono", "JetBrains Mono", monospace;
 }
 
 .visual-quote {
@@ -376,7 +487,6 @@ button {
   background: #111827;
   color: #f8fafc;
 }
-
 
 .preview-toolbar {
   justify-content: space-between;
@@ -417,10 +527,7 @@ button {
   color: #eef4ff;
   resize: vertical;
   line-height: 1.6;
-  font-family:
-    'IBM Plex Mono',
-    'JetBrains Mono',
-    monospace;
+  font-family: "IBM Plex Mono", "JetBrains Mono", monospace;
 }
 
 .source-editor--fused {
@@ -433,13 +540,10 @@ button {
   background: #fff;
   color: #0f172a;
   line-height: 1.8;
-  font-family:
-    'IBM Plex Sans',
-    'Noto Sans JP',
-    sans-serif;
+  font-family: "IBM Plex Sans", "Noto Sans JP", sans-serif;
 }
 
-.source-editor--wysiwyg .tiptap-mathematics-render[data-type='block-math'] {
+.source-editor--wysiwyg .tiptap-mathematics-render[data-type="block-math"] {
   display: block;
   margin: 1.1rem 0;
   overflow-x: auto;
@@ -638,18 +742,18 @@ button {
   border-color: #94a3b8;
 }
 
-[data-theme='dark'] .tiptap-editor-toolbar {
+[data-theme="dark"] .tiptap-editor-toolbar {
   background: #0f1a2e;
   border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
-[data-theme='dark'] .tiptap-editor-toolbar__btn {
+[data-theme="dark"] .tiptap-editor-toolbar__btn {
   background: #1e293b;
   border-color: rgba(255, 255, 255, 0.12);
   color: #cbd5e1;
 }
 
-[data-theme='dark'] .tiptap-editor-toolbar__btn:hover {
+[data-theme="dark"] .tiptap-editor-toolbar__btn:hover {
   background: #263652;
   border-color: rgba(125, 211, 252, 0.4);
 }
@@ -683,7 +787,10 @@ button {
   background: #f8fafc;
   color: #334155;
   cursor: pointer;
-  transition: background 120ms, border-color 120ms, color 120ms;
+  transition:
+    background 120ms,
+    border-color 120ms,
+    color 120ms;
 }
 
 .tiptap-math-modal__type-toggle button.is-active {
@@ -714,25 +821,25 @@ button {
   font-style: italic;
 }
 
-[data-theme='dark'] .tiptap-math-modal {
+[data-theme="dark"] .tiptap-math-modal {
   background: #0d223a;
   color: #e2e8f0;
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-[data-theme='dark'] .tiptap-math-modal__type-toggle button {
+[data-theme="dark"] .tiptap-math-modal__type-toggle button {
   background: #162c49;
   border-color: #344c69;
   color: #cbd5e1;
 }
 
-[data-theme='dark'] .tiptap-math-modal__type-toggle button.is-active {
+[data-theme="dark"] .tiptap-math-modal__type-toggle button.is-active {
   background: #1d4ed8;
   border-color: #1d4ed8;
   color: #fff;
 }
 
-[data-theme='dark'] .tiptap-math-modal__preview {
+[data-theme="dark"] .tiptap-math-modal__preview {
   background: #0b2c53;
   border-color: #2e445c;
 }
@@ -812,27 +919,27 @@ button {
   border-radius: 4px;
 }
 
-[data-theme='dark'] .tiptap-image-modal {
+[data-theme="dark"] .tiptap-image-modal {
   background: #0d223a;
   color: #e2e8f0;
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-[data-theme='dark'] .tiptap-image-modal__label {
+[data-theme="dark"] .tiptap-image-modal__label {
   color: #94a3b8;
 }
 
-[data-theme='dark'] .tiptap-image-modal__input {
+[data-theme="dark"] .tiptap-image-modal__input {
   background: #162c49;
   border-color: #344c69;
   color: #e2e8f0;
 }
 
-[data-theme='dark'] .tiptap-image-modal__input:focus {
+[data-theme="dark"] .tiptap-image-modal__input:focus {
   border-color: rgba(56, 189, 248, 0.5);
 }
 
-[data-theme='dark'] .tiptap-image-modal__preview {
+[data-theme="dark"] .tiptap-image-modal__preview {
   background: #0b2c53;
   border-color: #2e445c;
 }
@@ -881,10 +988,7 @@ button {
   padding: 12px 14px;
   resize: vertical;
   line-height: 1.6;
-  font-family:
-    'IBM Plex Mono',
-    'JetBrains Mono',
-    monospace;
+  font-family: "IBM Plex Mono", "JetBrains Mono", monospace;
 }
 
 .tiptap-mermaid-modal__actions {
@@ -1036,7 +1140,9 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: border-color 160ms ease, background-color 160ms ease;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
 }
 
 .emoji-picker__trigger:hover {
@@ -1146,7 +1252,11 @@ button {
 }
 
 .badge-selector__badge--active {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(99, 102, 241, 0.25));
+  background: linear-gradient(
+    135deg,
+    rgba(56, 189, 248, 0.25),
+    rgba(99, 102, 241, 0.25)
+  );
   border-color: rgba(56, 189, 248, 0.55);
   color: #f1f5f9;
   box-shadow: 0 0 12px rgba(56, 189, 248, 0.15);
@@ -1168,7 +1278,9 @@ button {
   border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 8px;
   cursor: text;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
   min-height: 42px;
 }
 
@@ -1183,7 +1295,11 @@ button {
   gap: 4px;
   padding: 3px 10px;
   border-radius: 14px;
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(99, 102, 241, 0.18));
+  background: linear-gradient(
+    135deg,
+    rgba(56, 189, 248, 0.2),
+    rgba(99, 102, 241, 0.18)
+  );
   border: 1px solid rgba(56, 189, 248, 0.35);
   color: #bae6fd;
   font-size: 0.82rem;
@@ -1252,226 +1368,224 @@ button {
 /* ── Light mode ── */
 
 /* html[data-theme='light'] beats :root specificity */
-html[data-theme='light'] {
+html[data-theme="light"] {
   background: #edf2f7;
   color: #0f172a;
 }
 
-html[data-theme='light'] body {
+html[data-theme="light"] body {
   background: #edf2f7;
 }
 
-[data-theme='light'] .top-bar {
+[data-theme="light"] .top-bar {
   background: rgba(255, 255, 255, 0.97);
   border-bottom-color: rgba(0, 0, 0, 0.07);
 }
 
-[data-theme='light'] .top-bar__brand {
+[data-theme="light"] .top-bar__brand {
   color: #1d4ed8;
 }
 
-[data-theme='light'] .top-bar__doc-name {
+[data-theme="light"] .top-bar__doc-name {
   background: rgba(0, 0, 0, 0.05);
   color: #1e293b;
 }
 
-[data-theme='light'] .top-bar__save-status {
+[data-theme="light"] .top-bar__save-status {
   color: rgba(30, 41, 59, 0.5);
 }
 
-[data-theme='light'] .top-bar__status span {
+[data-theme="light"] .top-bar__status span {
   background: rgba(29, 78, 216, 0.06);
   color: rgba(30, 41, 59, 0.6);
 }
 
-[data-theme='light'] .top-bar__actions button {
+[data-theme="light"] .top-bar__actions button {
   background: #fff;
   border-color: rgba(0, 0, 0, 0.12);
   color: #1e293b;
 }
 
-[data-theme='light'] .top-bar__actions button:hover {
+[data-theme="light"] .top-bar__actions button:hover {
   border-color: #93c5fd;
   background: #eff6ff;
 }
 
 /* panel--yaml (Zenn header) のライトモード */
-[data-theme='light'] .panel--yaml {
+[data-theme="light"] .panel--yaml {
   background: #edf2f7;
   border-color: rgba(0, 0, 0, 0.07);
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
 }
 
-[data-theme='light'] .zenn-header-preview {
+[data-theme="light"] .zenn-header-preview {
   background: #edf2f7;
 }
 
-[data-theme='light'] .zenn-header-preview__title {
+[data-theme="light"] .zenn-header-preview__title {
   color: #0f172a;
 }
 
-[data-theme='light'] .zenn-header-preview__title::placeholder {
+[data-theme="light"] .zenn-header-preview__title::placeholder {
   color: rgba(15, 23, 42, 0.3);
 }
 
-[data-theme='light'] .zenn-header-preview__emoji-btn {
+[data-theme="light"] .zenn-header-preview__emoji-btn {
   border-color: rgba(0, 0, 0, 0.12);
   background: rgba(0, 0, 0, 0.04);
 }
 
-[data-theme='light'] .zenn-header-preview__emoji-btn:hover {
+[data-theme="light"] .zenn-header-preview__emoji-btn:hover {
   border-color: rgba(0, 0, 0, 0.25);
   background: rgba(0, 0, 0, 0.08);
 }
 
-[data-theme='light'] .badge-selector__badge {
+[data-theme="light"] .badge-selector__badge {
   background: rgba(255, 255, 255, 0.7);
   border-color: rgba(0, 0, 0, 0.12);
   color: rgba(15, 23, 42, 0.7);
 }
 
-[data-theme='light'] .badge-selector__badge--active {
+[data-theme="light"] .badge-selector__badge--active {
   background: rgba(14, 116, 144, 0.12);
   border-color: rgba(14, 116, 144, 0.4);
   color: #0e7490;
   box-shadow: none;
 }
 
-[data-theme='light'] .topic-tag-input {
+[data-theme="light"] .topic-tag-input {
   background: rgba(255, 255, 255, 0.7);
   border-color: rgba(0, 0, 0, 0.12);
 }
 
-[data-theme='light'] .topic-chip {
+[data-theme="light"] .topic-chip {
   background: rgba(14, 116, 144, 0.1);
   border-color: rgba(14, 116, 144, 0.25);
   color: #0e7490;
 }
 
-[data-theme='light'] .topic-tag-input__field {
+[data-theme="light"] .topic-tag-input__field {
   color: #0f172a;
 }
 
-[data-theme='light'] .topic-tag-input__field::placeholder {
+[data-theme="light"] .topic-tag-input__field::placeholder {
   color: rgba(15, 23, 42, 0.35);
 }
 
-[data-theme='light'] .emoji-picker__popover {
+[data-theme="light"] .emoji-picker__popover {
   background: #fff;
   border-color: rgba(0, 0, 0, 0.1);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
 }
 
-[data-theme='light'] .emoji-picker__search {
+[data-theme="light"] .emoji-picker__search {
   background: #f1f5f9;
   border-color: rgba(0, 0, 0, 0.12);
   color: #0f172a;
 }
 
-[data-theme='light'] .emoji-picker__search::placeholder {
+[data-theme="light"] .emoji-picker__search::placeholder {
   color: rgba(15, 23, 42, 0.4);
 }
 
-[data-theme='light'] .emoji-picker__item:hover {
+[data-theme="light"] .emoji-picker__item:hover {
   background: rgba(0, 0, 0, 0.07);
 }
 
-[data-theme='light'] .emoji-picker__item--selected {
+[data-theme="light"] .emoji-picker__item--selected {
   background: rgba(14, 116, 144, 0.15);
   outline-color: rgba(14, 116, 144, 0.5);
 }
 
-[data-theme='light'] .emoji-picker__empty {
+[data-theme="light"] .emoji-picker__empty {
   color: rgba(15, 23, 42, 0.45);
 }
 
-
 /* panel--editor のライトモード */
-[data-theme='light'] .panel--editor {
+[data-theme="light"] .panel--editor {
   background: #fff;
   color: #0f172a;
   border-color: rgba(0, 0, 0, 0.07);
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
 }
 
-[data-theme='light'] .source-editor--wysiwyg {
+[data-theme="light"] .source-editor--wysiwyg {
   background: #fff;
   color: #0f172a;
 }
 
-[data-theme='light'] .tiptap-scroll-container {
+[data-theme="light"] .tiptap-scroll-container {
   background: #fff;
   color: #0f172a;
 }
-
 
 /* ── Dark mode editor ── */
 
-[data-theme='dark'] .panel--editor {
+[data-theme="dark"] .panel--editor {
   background: #0d223a;
   color: #e2e8f0;
 }
 
-[data-theme='dark'] .source-editor--wysiwyg {
+[data-theme="dark"] .source-editor--wysiwyg {
   background: #0d223a;
   color: #e2e8f0;
 }
 
-[data-theme='dark'] .tiptap-scroll-container {
+[data-theme="dark"] .tiptap-scroll-container {
   background: #0d223a;
   color: #e2e8f0;
 }
 
-[data-theme='dark'] .editor-loading {
+[data-theme="dark"] .editor-loading {
   background: #0d223a;
   color: #64748b;
   border-color: rgba(255, 255, 255, 0.06);
 }
 
-[data-theme='dark'] .tiptap-table-toolbar {
+[data-theme="dark"] .tiptap-table-toolbar {
   background: #0f1a2e;
   border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
-[data-theme='dark'] .tiptap-table-toolbar button {
+[data-theme="dark"] .tiptap-table-toolbar button {
   background: #1e293b;
   border-color: rgba(255, 255, 255, 0.12);
   color: #cbd5e1;
 }
 
-[data-theme='dark'] .tiptap-table-toolbar button:hover {
+[data-theme="dark"] .tiptap-table-toolbar button:hover {
   background: #263652;
   border-color: rgba(125, 211, 252, 0.4);
 }
 
 /* znc dark mode は zenn-content-css の [data-theme^=dark] .znc で自動適用される */
 
-[data-theme='dark'] .source-editor--wysiwyg .tiptap-footnote-label {
+[data-theme="dark"] .source-editor--wysiwyg .tiptap-footnote-label {
   color: #acbcc7;
 }
 
-[data-theme='dark'] .source-editor--wysiwyg .tiptap-footnote-input {
+[data-theme="dark"] .source-editor--wysiwyg .tiptap-footnote-input {
   background: #0b2c53;
   border-color: #2e445c;
   color: #e2e8f0;
 }
 
-[data-theme='dark'] .source-editor--wysiwyg .tiptap-mermaid-preview {
+[data-theme="dark"] .source-editor--wysiwyg .tiptap-mermaid-preview {
   background: #0b2c53;
   border-color: #2e445c;
 }
 
-[data-theme='dark'] .source-editor--wysiwyg .tiptap-mermaid-preview__label {
+[data-theme="dark"] .source-editor--wysiwyg .tiptap-mermaid-preview__label {
   color: #acbcc7;
 }
 
-[data-theme='dark'] .source-editor--wysiwyg .tiptap-mermaid-preview__edit {
+[data-theme="dark"] .source-editor--wysiwyg .tiptap-mermaid-preview__edit {
   background: #162c49;
   border-color: #344c69;
   color: #e2e8f0;
 }
 
-[data-theme='dark'] .source-editor--wysiwyg .tiptap-details-summary-input {
+[data-theme="dark"] .source-editor--wysiwyg .tiptap-details-summary-input {
   color: #e2e8f0;
 }
 

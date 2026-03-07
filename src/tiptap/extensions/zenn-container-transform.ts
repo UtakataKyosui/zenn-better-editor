@@ -1,5 +1,9 @@
 import type { Editor } from '@tiptap/core';
-import type { Node as ProseMirrorNode, NodeType, Schema } from '@tiptap/pm/model';
+import type {
+  NodeType,
+  Node as ProseMirrorNode,
+  Schema,
+} from '@tiptap/pm/model';
 
 const CONTAINER_OPEN_PATTERN = /^:::(message|details)(?:\s+(.*))?$/;
 const CONTAINER_CLOSE_PATTERN = /^:::\s*$/;
@@ -41,7 +45,8 @@ const createContainerNode = (
   content: ProseMirrorNode[],
 ) => {
   const paragraphType = schema.nodes.paragraph;
-  const fallbackContent = content.length > 0 ? content : [paragraphType.create()];
+  const fallbackContent =
+    content.length > 0 ? content : [paragraphType.create()];
 
   if (open.kind === 'message') {
     const messageType = schema.nodes.zennMessage;

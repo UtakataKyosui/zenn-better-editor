@@ -1,6 +1,6 @@
 import { Editor } from '@tiptap/core';
-import StarterKit from '@tiptap/starter-kit';
 import { Markdown } from '@tiptap/markdown';
+import StarterKit from '@tiptap/starter-kit';
 
 const editor = new Editor({
   extensions: [StarterKit, Markdown],

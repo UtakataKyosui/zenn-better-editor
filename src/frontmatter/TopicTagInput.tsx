@@ -1,4 +1,4 @@
-import { useState, useRef, type KeyboardEvent } from 'react';
+import { type KeyboardEvent, useRef, useState } from 'react';
 
 type TopicTagInputProps = {
   topics: string[];
@@ -10,7 +10,10 @@ export const TopicTagInput = ({ topics, onChange }: TopicTagInputProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const addTopic = (value: string) => {
-    const trimmed = value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+    const trimmed = value
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, '');
     if (trimmed && !topics.includes(trimmed) && topics.length < 5) {
       onChange([...topics, trimmed]);
     }
@@ -67,9 +70,7 @@ export const TopicTagInput = ({ topics, onChange }: TopicTagInputProps) => {
         disabled={topics.length >= 5}
         aria-label="Add topic"
       />
-      <span className="topic-tag-input__hint">
-        {topics.length}/5 topics
-      </span>
+      <span className="topic-tag-input__hint">{topics.length}/5 topics</span>
     </fieldset>
   );
 };

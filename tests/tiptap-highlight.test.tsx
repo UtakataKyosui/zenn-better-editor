@@ -2,13 +2,13 @@ import { expect, test } from '@rstest/core';
 import { fireEvent, render, waitFor } from '@testing-library/react';
 import { useEffect, useState } from 'react';
 import markdownToHtml from 'zenn-markdown-html';
-import { TiptapEditor } from '../src/components/TiptapEditor';
+import { TiptapEditor } from '../src/tiptap/TiptapEditor';
 
 test('renders syntax-highlighted spans in code blocks', async () => {
   const markdown = [
     '```ts:src/example.ts',
     'export const hello = (name: string) => {',
-    "  return `Hello, ${name}`;",
+    '  return `Hello, ${name}`;',
     '};',
     '```',
     '',
@@ -137,7 +137,9 @@ test('opens a mermaid edit modal from preview widget', async () => {
 
   await waitFor(
     () => {
-      expect(container.querySelector('.tiptap-mermaid-preview__edit')).not.toBeNull();
+      expect(
+        container.querySelector('.tiptap-mermaid-preview__edit'),
+      ).not.toBeNull();
     },
     { timeout: 5000 },
   );
@@ -148,7 +150,7 @@ test('opens a mermaid edit modal from preview widget', async () => {
   fireEvent.click(editButton);
 
   await waitFor(() => {
-    const textarea = container.querySelector(
+    const textarea = document.querySelector(
       '.tiptap-mermaid-modal__input',
     ) as HTMLTextAreaElement | null;
     expect(textarea).not.toBeNull();
@@ -186,7 +188,9 @@ test('opens mermaid modal with mermaid source even when ts blocks exist', async 
 
   await waitFor(
     () => {
-      expect(container.querySelector('.tiptap-mermaid-preview__edit')).not.toBeNull();
+      expect(
+        container.querySelector('.tiptap-mermaid-preview__edit'),
+      ).not.toBeNull();
     },
     { timeout: 5000 },
   );
@@ -197,7 +201,7 @@ test('opens mermaid modal with mermaid source even when ts blocks exist', async 
   fireEvent.click(editButton);
 
   await waitFor(() => {
-    const textarea = container.querySelector(
+    const textarea = document.querySelector(
       '.tiptap-mermaid-modal__input',
     ) as HTMLTextAreaElement | null;
     expect(textarea).not.toBeNull();
@@ -222,7 +226,9 @@ test('keeps mermaid preview available for untyped mermaid-like code blocks', asy
 
   await waitFor(
     () => {
-      expect(container.querySelector('.tiptap-mermaid-preview__edit')).not.toBeNull();
+      expect(
+        container.querySelector('.tiptap-mermaid-preview__edit'),
+      ).not.toBeNull();
     },
     { timeout: 5000 },
   );
@@ -233,7 +239,7 @@ test('keeps mermaid preview available for untyped mermaid-like code blocks', asy
   fireEvent.click(editButton);
 
   await waitFor(() => {
-    const textarea = container.querySelector(
+    const textarea = document.querySelector(
       '.tiptap-mermaid-modal__input',
     ) as HTMLTextAreaElement | null;
     expect(textarea).not.toBeNull();
@@ -263,7 +269,9 @@ test('shows mermaid preview when the fence info has a title suffix', async () =>
 
   await waitFor(
     () => {
-      expect(container.querySelector('.tiptap-mermaid-preview__edit')).not.toBeNull();
+      expect(
+        container.querySelector('.tiptap-mermaid-preview__edit'),
+      ).not.toBeNull();
     },
     { timeout: 5000 },
   );
@@ -325,7 +333,9 @@ test('keeps mermaid preview for init directive blocks without an explicit langua
 
   await waitFor(
     () => {
-      expect(container.querySelector('.tiptap-mermaid-preview__edit')).not.toBeNull();
+      expect(
+        container.querySelector('.tiptap-mermaid-preview__edit'),
+      ).not.toBeNull();
     },
     { timeout: 5000 },
   );
@@ -379,7 +389,9 @@ test('renders markdown images inside wysiwyg editor', async () => {
 
   await waitFor(
     () => {
-      const image = container.querySelector('img.md-img') as HTMLImageElement | null;
+      const image = container.querySelector(
+        'img.md-img',
+      ) as HTMLImageElement | null;
       expect(image).not.toBeNull();
       expect(image?.getAttribute('src')).toContain(
         'storage.googleapis.com/zenn-user-upload/topics/a0d4d7f86a.jpeg',
@@ -532,7 +544,9 @@ test('keeps images visible with app-like markdown state syncing', async () => {
 });
 
 test('toggles zenn details by clicking summary in wysiwyg', async () => {
-  const markdown = [':::details タイトル', '表示したい内容', ':::', ''].join('\n');
+  const markdown = [':::details タイトル', '表示したい内容', ':::', ''].join(
+    '\n',
+  );
   const initialHtml = await markdownToHtml(markdown);
 
   const { container } = render(
@@ -547,7 +561,9 @@ test('toggles zenn details by clicking summary in wysiwyg', async () => {
 
   await waitFor(
     () => {
-      expect(container.querySelector('details.zenn-details summary')).not.toBeNull();
+      expect(
+        container.querySelector('details.zenn-details summary'),
+      ).not.toBeNull();
     },
     { timeout: 5000 },
   );
@@ -571,7 +587,9 @@ test('toggles zenn details by clicking summary in wysiwyg', async () => {
 });
 
 test('allows editing zenn details summary title in wysiwyg', async () => {
-  const markdown = [':::details 元タイトル', '表示したい内容', ':::', ''].join('\n');
+  const markdown = [':::details 元タイトル', '表示したい内容', ':::', ''].join(
+    '\n',
+  );
   const initialHtml = await markdownToHtml(markdown);
   const changes: string[] = [];
 
@@ -609,7 +627,9 @@ test('allows editing zenn details summary title in wysiwyg', async () => {
 });
 
 test('allows editing footnote content from the rendered footnotes section', async () => {
-  const markdown = ['脚注の参照[^note]', '', '[^note]: 初期脚注', ''].join('\n');
+  const markdown = ['脚注の参照[^note]', '', '[^note]: 初期脚注', ''].join(
+    '\n',
+  );
   const initialHtml = await markdownToHtml(markdown);
   const changes: string[] = [];
 

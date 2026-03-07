@@ -1,4 +1,4 @@
-import { Node, mergeAttributes } from '@tiptap/core';
+import { mergeAttributes, Node } from '@tiptap/core';
 import { primeZennEmbeddedIframe } from '../../utils/zenn-embed-runtime';
 
 type IframeAttrs = {
@@ -60,7 +60,8 @@ const assignIframeAttrs = (
   if (iframeAttrs.frameborder) attrs.frameborder = iframeAttrs.frameborder;
   if (iframeAttrs.loading) attrs.loading = iframeAttrs.loading;
   if (iframeAttrs.allow) attrs.allow = iframeAttrs.allow;
-  if (iframeAttrs.allowfullscreen) attrs.allowfullscreen = iframeAttrs.allowfullscreen;
+  if (iframeAttrs.allowfullscreen)
+    attrs.allowfullscreen = iframeAttrs.allowfullscreen;
 
   return attrs;
 };
@@ -179,7 +180,9 @@ export const ZennEmbedBlock = Node.create({
       const explicitIndex = src.indexOf('@[');
       const urlMatch = src.match(/https?:\/\//);
       const urlIndex =
-        typeof urlMatch?.index === 'number' ? urlMatch.index : Number.POSITIVE_INFINITY;
+        typeof urlMatch?.index === 'number'
+          ? urlMatch.index
+          : Number.POSITIVE_INFINITY;
 
       if (explicitIndex < 0 && !Number.isFinite(urlIndex)) {
         return -1;
@@ -319,7 +322,9 @@ export const ZennEmbedBlock = Node.create({
       return `${source}\n`;
     }
 
-    const payload = decodeEmbedPayload(String(node.attrs.iframeDataContent || '')).trim();
+    const payload = decodeEmbedPayload(
+      String(node.attrs.iframeDataContent || ''),
+    ).trim();
     if (payload) {
       return `${payload}\n`;
     }

@@ -16,8 +16,8 @@ import {
   splitMarkdownParts,
   stripLeadingFrontmatter,
 } from '../utils/markdown';
-import { validateWithZennModel } from '../utils/zenn-model';
 import { bootZennEmbedRuntime } from '../utils/zenn-embed-runtime';
+import { validateWithZennModel } from '../utils/zenn-model';
 
 const shouldUseExternalEmbedOrigin = () => {
   if (typeof navigator === 'undefined') {
@@ -75,7 +75,11 @@ const Tiptap = () => {
 
   useEffect(() => {
     const theme = isDark ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', theme);
+    const html = document.documentElement;
+    html.setAttribute('data-theme', theme);
+    // shadcn/ui uses .dark class; zenn-content-css uses [data-theme^=dark]
+    html.classList.toggle('dark', isDark);
+    html.classList.toggle('light', !isDark);
     localStorage.setItem('theme', theme);
   }, [isDark]);
   const fileHandleRef = useRef<FileSystemFileHandle | null>(null);
@@ -127,7 +131,9 @@ const Tiptap = () => {
 
       if (!canRead) {
         setDocumentName(rememberedHandle.name);
-        setSaveStatus(`Remembered ${rememberedHandle.name} (Open .md to grant access)`);
+        setSaveStatus(
+          `Remembered ${rememberedHandle.name} (Open .md to grant access)`,
+        );
         return;
       }
 
@@ -287,8 +293,11 @@ const Tiptap = () => {
 
   const saveDocument = async () => {
     if (modelValidation.criticalCount > 0) {
-      const firstCritical = modelValidation.errors.find((error) => error.isCritical);
-      const reason = firstCritical?.message || 'zenn-model critical validation errors';
+      const firstCritical = modelValidation.errors.find(
+        (error) => error.isCritical,
+      );
+      const reason =
+        firstCritical?.message || 'zenn-model critical validation errors';
       setSaveStatus(`Cannot save: ${reason}`);
       return;
     }

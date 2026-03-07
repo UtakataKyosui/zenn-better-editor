@@ -1,4 +1,4 @@
-import { validateArticle, type ValidationError } from 'zenn-model';
+import { type ValidationError, validateArticle } from 'zenn-model';
 import { parseFrontmatter } from '../frontmatter/frontmatter';
 
 type ZennModelValidationInput = {

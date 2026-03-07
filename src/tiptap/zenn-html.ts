@@ -1,5 +1,8 @@
 const trimLatex = (value: string | null | undefined) => {
-  return (value || '').replace(/\u00a0/g, ' ').replace(/\r\n?/g, '\n').trim();
+  return (value || '')
+    .replace(/\u00a0/g, ' ')
+    .replace(/\r\n?/g, '\n')
+    .trim();
 };
 
 const parseFenceLanguage = (fenceInfo: string) => {
@@ -43,7 +46,8 @@ const parseFenceMetadata = (fenceInfo: string) => {
     const separatorIndex = secondary.indexOf(':');
     return {
       language: 'diff',
-      filename: separatorIndex > 0 ? secondary.slice(separatorIndex + 1).trim() : '',
+      filename:
+        separatorIndex > 0 ? secondary.slice(separatorIndex + 1).trim() : '',
       fenceInfo: compact,
     };
   }
@@ -172,7 +176,9 @@ const flattenShikiCodeToPlainText = (root: HTMLElement) => {
   );
 
   codeNodes.forEach((codeNode) => {
-    const lineNodes = Array.from(codeNode.querySelectorAll(':scope > span.line'));
+    const lineNodes = Array.from(
+      codeNode.querySelectorAll(':scope > span.line'),
+    );
     if (lineNodes.length === 0) return;
 
     const lines = lineNodes.map((lineNode) => lineNode.textContent || '');
@@ -213,7 +219,9 @@ const convertMermaidEmbedsToCodeBlocks = (root: HTMLElement) => {
     pre.append(code);
     container.append(pre);
 
-    const wrapper = iframeNode.closest('span.embed-block.zenn-embedded-mermaid');
+    const wrapper = iframeNode.closest(
+      'span.embed-block.zenn-embedded-mermaid',
+    );
     if (wrapper) {
       wrapper.replaceWith(container);
     } else {
@@ -269,7 +277,10 @@ export const normalizeZennHtmlForTiptap = (
 
   try {
     const parser = new DOMParser();
-    const doc = parser.parseFromString(`<div id="znc-root">${html}</div>`, 'text/html');
+    const doc = parser.parseFromString(
+      `<div id="znc-root">${html}</div>`,
+      'text/html',
+    );
     const root = doc.getElementById('znc-root');
 
     if (!root) {

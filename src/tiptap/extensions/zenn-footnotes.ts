@@ -92,7 +92,9 @@ export const ZennFootnoteReference = Node.create({
 
   // biome-ignore lint/suspicious/noExplicitAny: markdown serializer types are dynamic
   renderMarkdown: (node: any) => {
-    const label = normalizeLabel(String(node.attrs?.label || node.attrs?.index || '1'));
+    const label = normalizeLabel(
+      String(node.attrs?.label || node.attrs?.index || '1'),
+    );
     return `[^${label}]`;
   },
 });
@@ -113,7 +115,9 @@ export const ZennFootnotesSection = Node.create({
           );
           const parsed = listItems.map((item, i) => {
             const id = item.getAttribute('id') || `fn-${i + 1}`;
-            const safeLabel = normalizeLabel(id.replace(/^fn-/, '') || String(i + 1));
+            const safeLabel = normalizeLabel(
+              id.replace(/^fn-/, '') || String(i + 1),
+            );
             const backref = item.querySelector('a.footnote-backref');
             const paragraph = item.querySelector('p');
             const content = (paragraph?.textContent || '')
@@ -217,8 +221,12 @@ export const ZennFootnotesSection = Node.create({
           textarea.rows = 1;
           textarea.spellcheck = false;
           textarea.setAttribute('aria-label', `Footnote ${item.index} content`);
-          textarea.addEventListener('mousedown', (event) => event.stopPropagation());
-          textarea.addEventListener('keydown', (event) => event.stopPropagation());
+          textarea.addEventListener('mousedown', (event) =>
+            event.stopPropagation(),
+          );
+          textarea.addEventListener('keydown', (event) =>
+            event.stopPropagation(),
+          );
           textarea.addEventListener('blur', () => {
             updateItem(item.label, textarea.value.trim());
           });
@@ -228,7 +236,12 @@ export const ZennFootnotesSection = Node.create({
           backref.href = `#${item.refId || `fnref-${normalizeLabel(item.label)}`}`;
           backref.textContent = '↩︎';
 
-          paragraph.append(label, textarea, document.createTextNode(' '), backref);
+          paragraph.append(
+            label,
+            textarea,
+            document.createTextNode(' '),
+            backref,
+          );
           li.append(paragraph);
           list.append(li);
         });
@@ -286,6 +299,8 @@ export const ZennFootnotesSection = Node.create({
   renderMarkdown: (node: any) => {
     const items = parseItems(node.attrs?.items);
     if (items.length === 0) return '';
-    return items.map((item) => `[^${item.label}]: ${item.content || ''}`).join('\n');
+    return items
+      .map((item) => `[^${item.label}]: ${item.content || ''}`)
+      .join('\n');
   },
 });

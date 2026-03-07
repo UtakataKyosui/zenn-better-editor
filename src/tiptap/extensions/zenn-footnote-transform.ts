@@ -160,7 +160,9 @@ const collectState = (doc: ProseMirrorNode, schema: Schema) => {
 
     node.forEach((child) => {
       if (child.type === refType) {
-        const label = normalizeLabel(String(child.attrs.label || child.attrs.index || '1'));
+        const label = normalizeLabel(
+          String(child.attrs.label || child.attrs.index || '1'),
+        );
         if (!seenLabels.has(label)) {
           labelsInOrder.push(label);
           seenLabels.add(label);
@@ -234,7 +236,11 @@ const collectState = (doc: ProseMirrorNode, schema: Schema) => {
     }
   });
 
-  if (labelsInOrder.length === 0 && definitionLines.length === 0 && existingSections.length === 0) {
+  if (
+    labelsInOrder.length === 0 &&
+    definitionLines.length === 0 &&
+    existingSections.length === 0
+  ) {
     return null;
   }
 
@@ -268,7 +274,10 @@ const normalizeItems = (items: FootnoteItem[]) => {
 };
 
 const areSameItems = (left: FootnoteItem[], right: FootnoteItem[]) => {
-  return JSON.stringify(normalizeItems(left)) === JSON.stringify(normalizeItems(right));
+  return (
+    JSON.stringify(normalizeItems(left)) ===
+    JSON.stringify(normalizeItems(right))
+  );
 };
 
 export const convertTypedZennFootnotes = (editor: Editor) => {

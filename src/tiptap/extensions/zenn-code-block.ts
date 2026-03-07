@@ -1,5 +1,5 @@
-import CodeBlock from '@tiptap/extension-code-block';
 import { mergeAttributes } from '@tiptap/core';
+import CodeBlock from '@tiptap/extension-code-block';
 
 const parseFenceInfo = (value: string) => {
   const compact = value.trim();
@@ -146,7 +146,10 @@ export const ZennCodeBlock = CodeBlock.extend({
       node.attrs.filename,
       node.attrs.fenceInfo,
     );
-    const preAttrs = mergeAttributes(this.options.HTMLAttributes, HTMLAttributes);
+    const preAttrs = mergeAttributes(
+      this.options.HTMLAttributes,
+      HTMLAttributes,
+    );
 
     delete (preAttrs as Record<string, string>).filename;
     delete (preAttrs as Record<string, string>).fenceInfo;
@@ -165,9 +168,7 @@ export const ZennCodeBlock = CodeBlock.extend({
       [
         'code',
         {
-          class: language
-            ? this.options.languageClassPrefix + language
-            : null,
+          class: language ? this.options.languageClassPrefix + language : null,
         },
         0,
       ],
@@ -220,6 +221,8 @@ export const ZennCodeBlock = CodeBlock.extend({
 \`\`\``;
     }
 
-    return [openingFence, helpers.renderChildren(node.content), '```'].join('\n');
+    return [openingFence, helpers.renderChildren(node.content), '```'].join(
+      '\n',
+    );
   },
 });

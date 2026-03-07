@@ -51,7 +51,8 @@ const ensureLanguage = async (
   fallbackLanguage: string,
 ) => {
   const normalized = (language || fallbackLanguage).trim().toLowerCase();
-  const resolvedLanguage = highlighter.resolveLangAlias(normalized) || normalized;
+  const resolvedLanguage =
+    highlighter.resolveLangAlias(normalized) || normalized;
   const loaded = new Set(highlighter.getLoadedLanguages());
 
   if (!loaded.has(resolvedLanguage) && resolvedLanguage !== 'text') {
@@ -178,23 +179,25 @@ const buildDecorations = ({
   return DecorationSet.create(doc, decorations);
 };
 
-export const ZennShikiCodeHighlight = Extension.create<ShikiCodeHighlightOptions>(
-  {
+export const ZennShikiCodeHighlight =
+  Extension.create<ShikiCodeHighlightOptions>({
     name: 'zennShikiCodeHighlight',
 
     addOptions() {
-    return {
-      nodeName: 'codeBlock',
-      theme: 'github-dark',
-      defaultLanguage: 'text',
-      ignoreLanguages: ['mermaid', 'mmd'],
-    };
-  },
+      return {
+        nodeName: 'codeBlock',
+        theme: 'github-dark',
+        defaultLanguage: 'text',
+        ignoreLanguages: ['mermaid', 'mmd'],
+      };
+    },
 
     addProseMirrorPlugins() {
       const tokenCache = new Map<string, ShikiToken[][]>();
       const pendingRequests = new Set<string>();
-      const pluginKey = new PluginKey<DecorationSet>('zenn-shiki-code-highlight');
+      const pluginKey = new PluginKey<DecorationSet>(
+        'zenn-shiki-code-highlight',
+      );
       const ignoredLanguages = new Set(
         this.options.ignoreLanguages.map((lang) => lang.toLowerCase()),
       );
@@ -216,12 +219,15 @@ export const ZennShikiCodeHighlight = Extension.create<ShikiCodeHighlightOptions
                 dispatchRefresh: () => {
                   const { view } = this.editor;
                   if (!view || view.isDestroyed) return;
-                  view.dispatch(view.state.tr.setMeta(SHIKI_REFRESH_META, true));
+                  view.dispatch(
+                    view.state.tr.setMeta(SHIKI_REFRESH_META, true),
+                  );
                 },
               }),
             apply: (transaction, decorationSet, _oldState, newState) => {
               const shouldRebuild =
-                transaction.docChanged || Boolean(transaction.getMeta(SHIKI_REFRESH_META));
+                transaction.docChanged ||
+                Boolean(transaction.getMeta(SHIKI_REFRESH_META));
 
               if (shouldRebuild) {
                 return buildDecorations({
@@ -252,5 +258,4 @@ export const ZennShikiCodeHighlight = Extension.create<ShikiCodeHighlightOptions
         }),
       ];
     },
-  },
-);
+  });
