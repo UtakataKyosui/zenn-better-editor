@@ -290,3 +290,16 @@ export const clearRecentDirectoryHandle = async () => {
     database.close();
   }
 };
+
+export const deleteFileFromDirectory = async (
+  dirHandle: FileSystemDirectoryHandle,
+  fileName: string,
+): Promise<boolean> => {
+  try {
+    await dirHandle.removeEntry(fileName);
+    return true;
+  } catch (error) {
+    console.error('Failed to delete file:', error);
+    return false;
+  }
+};

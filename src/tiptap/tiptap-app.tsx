@@ -19,6 +19,7 @@ import {
   openArticlesDirectory,
   readFileFromDirectory,
   saveFileToDirectory,
+  deleteFileFromDirectory,
   saveRecentDirectoryHandle,
   saveRecentFileHandle,
 } from '../utils/file-system';
@@ -322,6 +323,33 @@ const Tiptap = () => {
   );
 
 
+  const handleDeleteArticle = useCallback(
+    async (fileName: string) => {
+      if (!dirHandleRef.current) return;
+
+      const deleted = await deleteFileFromDirectory(dirHandleRef.current, fileName);
+      if (!deleted) {
+        setSaveStatus(`Failed to delete ${fileName}`);
+        return;
+      }
+
+      // Refresh file list
+      const files = await listMarkdownFiles(dirHandleRef.current);
+      setArticleFiles(files);
+
+      // If the deleted file was currently open, reset the editor
+      if (activeArticle === fileName) {
+        const initialContent = `---\ntitle: ""\nemoji: "📝"\ntype: "tech" # tech: 技術記事 / idea: アイデア\ntopics: []\npublished: false\n---\n\n`;
+        setActiveArticle(null);
+        fileHandleRef.current = null;
+        loadMarkdownDocument(initialContent, '');
+      }
+
+      setSaveStatus(`Deleted ${fileName}`);
+    },
+    [activeArticle]
+  );
+
   const saveToHandle = async (handle: FileSystemFileHandle) => {
     const canWrite = await ensureHandlePermission(handle, 'readwrite', true);
     if (!canWrite) {
@@ -434,6 +462,7 @@ const Tiptap = () => {
           onRefresh={() => void handleRefreshFiles()}
           onSelectFile={(f) => void handleSelectFile(f)}
           onCreateNewArticle={() => setNewArticleModalOpen(true)}
+          onDeleteArticle={(f) => void handleDeleteArticle(f)}
         />
 
         <main className="editor-shell">

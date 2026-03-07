@@ -1,5 +1,14 @@
-import { FileText, FolderOpen, RefreshCw, PanelLeftClose, PanelLeft, FilePlus } from 'lucide-react';
+import { useState } from 'react';
+import { FileText, FolderOpen, RefreshCw, PanelLeftClose, PanelLeft, FilePlus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   Tooltip,
   TooltipContent,
@@ -16,6 +25,7 @@ type ArticlesSidebarProps = {
   onRefresh: () => void;
   onSelectFile: (fileName: string) => void;
   onCreateNewArticle: () => void;
+  onDeleteArticle: (fileName: string) => void;
 };
 
 export const ArticlesSidebar = ({
@@ -28,7 +38,17 @@ export const ArticlesSidebar = ({
   onRefresh,
   onSelectFile,
   onCreateNewArticle,
+  onDeleteArticle,
 }: ArticlesSidebarProps) => {
+  const [articleToDelete, setArticleToDelete] = useState<string | null>(null);
+
+  const confirmDelete = () => {
+    if (articleToDelete) {
+      onDeleteArticle(articleToDelete);
+      setArticleToDelete(null);
+    }
+  };
+
   return (
     <div className={`articles-sidebar-wrapper ${isOpen ? 'articles-sidebar-wrapper--open' : ''}`}>
       {/* Sidebar panel */}
@@ -112,6 +132,18 @@ export const ArticlesSidebar = ({
                       <span className="articles-sidebar__file-name">
                         {file.replace(/\.md$/i, '')}
                       </span>
+                      <button
+                        type="button"
+                        className="articles-sidebar__delete-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setArticleToDelete(file);
+                        }}
+                        aria-label={`${file} を削除`}
+                        title="削除"
+                      >
+                        <Trash2 size={13} />
+                      </button>
                     </button>
                   </li>
                 ))}
@@ -152,6 +184,34 @@ export const ArticlesSidebar = ({
           <TooltipContent side="right">サイドバーを開く</TooltipContent>
         </Tooltip>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!articleToDelete} onOpenChange={(open) => !open && setArticleToDelete(null)}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>記事の削除</DialogTitle>
+            <DialogDescription>
+              「{articleToDelete}」を削除しますか？この操作は取り消せません。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setArticleToDelete(null)}
+            >
+              キャンセル
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={confirmDelete}
+            >
+              削除する
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

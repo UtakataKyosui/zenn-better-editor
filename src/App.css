@@ -401,8 +401,37 @@ button {
 }
 
 .articles-sidebar__file-name {
+  flex-grow: 1;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.articles-sidebar__delete-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--zenn-sidebar-text);
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity 120ms ease, background-color 120ms ease, color 120ms ease;
+}
+
+.articles-sidebar__file:hover .articles-sidebar__delete-btn {
+  opacity: 1;
+}
+
+.articles-sidebar__delete-btn:hover {
+  background: rgba(220, 38, 38, 0.2);
+  color: #fca5a5;
+}
+
+[data-theme="light"] .articles-sidebar__delete-btn:hover {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
 }
 
 .articles-sidebar__empty {
