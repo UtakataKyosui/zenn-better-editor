@@ -86,16 +86,18 @@ export const MathModal = ({ state, onClose, onApply }: MathModalProps) => {
           autoFocus
         />
 
-        {/* biome-ignore lint/a11y/useAriaPropsSupportedByRole: aria-label for preview container */}
         <div
           className={`flex min-h-[60px] items-center justify-center overflow-x-auto rounded-md border p-3.5 ${
             previewHtml ? '' : 'text-sm italic text-muted-foreground'
           }`}
+          role="status"
           aria-label="プレビュー"
         >
           {previewHtml ? (
-            // biome-ignore lint/security/noDangerouslySetInnerHtml: KaTeX output is sanitized by the library
-            <span dangerouslySetInnerHTML={{ __html: previewHtml }} />
+            // biome-ignore lint/security/noDangerouslySetInnerHtml: KaTeX output is sanitized
+            <span
+              dangerouslySetInnerHTML={{ __html: previewHtml }}
+            />
           ) : (
             'プレビューがここに表示されます'
           )}

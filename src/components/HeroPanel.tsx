@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 
@@ -53,24 +54,26 @@ export const HeroPanel = ({
         <Button variant="outline" size="sm" onClick={onDownloadDocument}>
           Download
         </Button>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onToggleTheme}
-              aria-label={
-                isDark ? 'Switch to light mode' : 'Switch to dark mode'
-              }
-              className="top-bar__theme-toggle"
-            >
-              {isDark ? '☀️' : '🌙'}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            {isDark ? 'ライトモードに切り替え' : 'ダークモードに切り替え'}
-          </TooltipContent>
-        </Tooltip>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onToggleTheme}
+                aria-label={
+                  isDark ? 'Switch to light mode' : 'Switch to dark mode'
+                }
+                className="top-bar__theme-toggle"
+              >
+                {isDark ? '☀️' : '🌙'}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {isDark ? 'ライトモードに切り替え' : 'ダークモードに切り替え'}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </nav>
 
       <span className="top-bar__doc-name">{documentName}</span>
