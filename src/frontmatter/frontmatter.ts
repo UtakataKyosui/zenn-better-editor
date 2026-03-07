@@ -4,6 +4,8 @@ export type ZennFrontmatter = {
   type: 'tech' | 'idea';
   topics: string[];
   published: boolean;
+  publication_name?: string;
+  published_at?: string;
 };
 
 const DEFAULT_FRONTMATTER: ZennFrontmatter = {
@@ -80,6 +82,12 @@ export const parseFrontmatter = (yaml: string): ZennFrontmatter => {
       case 'published':
         result.published = value === 'true';
         break;
+      case 'publication_name':
+        result.publication_name = unquote(value);
+        break;
+      case 'published_at':
+        result.published_at = unquote(value);
+        break;
     }
   }
 
@@ -103,6 +111,13 @@ export const serializeFrontmatter = (data: ZennFrontmatter): string => {
   }
 
   lines.push(`published: ${data.published}`);
+
+  if (data.publication_name) {
+    lines.push(`publication_name: "${data.publication_name}"`);
+  }
+  if (data.published_at) {
+    lines.push(`published_at: "${data.published_at}"`);
+  }
 
   return lines.join('\n');
 };

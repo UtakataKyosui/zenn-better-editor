@@ -1,5 +1,5 @@
 import { expect, test } from '@rstest/core';
-import { parseZennImageInsertionLine } from '../../src/utils/zenn-image-transform';
+import { parseZennImageInsertionLine } from '../../src/tiptap/extensions/zenn-image-transform';
 
 test('parses plain zenn image markdown with size', () => {
   const parsed = parseZennImageInsertionLine(

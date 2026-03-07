@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@rstest/core';
 import markdownToHtml from 'zenn-markdown-html';
-import { normalizeZennHtmlForTiptap } from '../../src/utils/zenn-html';
+import { normalizeZennHtmlForTiptap } from '../../src/tiptap/zenn-html';
 
 describe('zenn html normalization', () => {
   it('keeps mermaid language on the mermaid block when mixed with shiki blocks', async () => {

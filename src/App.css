@@ -1530,6 +1530,40 @@ button {
   width: 100%;
 }
 
+.zenn-header-preview__advanced-row {
+  width: 100%;
+  display: flex;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.zenn-header-preview__advanced-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--zenn-modal-hint);
+}
+
+.zenn-header-preview__advanced-input {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+  width: 100%;
+}
+
+.zenn-header-preview__advanced-input:focus {
+  outline: none;
+  border-color: #7dd3fc;
+  box-shadow: 0 0 0 2px rgba(125, 211, 252, 0.2);
+}
+
 /* ── Emoji Picker ── */
 
 .emoji-picker {

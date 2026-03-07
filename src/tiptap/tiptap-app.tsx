@@ -4,6 +4,7 @@ import { ArticlesSidebar } from '../components/ArticlesSidebar';
 import { HeroPanel } from '../components/HeroPanel';
 import { HybridSurface } from '../components/HybridSurface';
 import { NewArticleModal } from '../components/NewArticleModal';
+import { TooltipProvider } from '../components/ui/tooltip';
 import { INITIAL_MARKDOWN } from '../constants/editor';
 import type { ZennFrontmatter } from '../frontmatter/frontmatter';
 import {
@@ -83,7 +84,14 @@ const Tiptap = () => {
   const [documentName, setDocumentName] = useState('untitled.md');
   const [saveStatus, setSaveStatus] = useState('Live markdown editing');
   const [isDark, setIsDark] = useState(() => {
-    return localStorage.getItem('theme') !== 'light';
+    try {
+      if (typeof window !== 'undefined' && window.localStorage && typeof window.localStorage.getItem === 'function') {
+        return window.localStorage.getItem('theme') !== 'light';
+      }
+    } catch {
+      // ignore
+    }
+    return false;
   });
 
   // ── Articles sidebar state ──
@@ -102,7 +110,13 @@ const Tiptap = () => {
     // shadcn/ui uses .dark class; zenn-content-css uses [data-theme^=dark]
     html.classList.toggle('dark', isDark);
     html.classList.toggle('light', !isDark);
-    localStorage.setItem('theme', theme);
+    try {
+      if (typeof window !== 'undefined' && window.localStorage && typeof window.localStorage.setItem === 'function') {
+        window.localStorage.setItem('theme', theme);
+      }
+    } catch {
+      // ignore
+    }
   }, [isDark]);
   const fileHandleRef = useRef<FileSystemFileHandle | null>(null);
   const hasInitialHtmlResolvedRef = useRef(!shouldDeferInitialRender);
@@ -438,8 +452,9 @@ const Tiptap = () => {
   const readingMinutes = Math.max(1, Math.ceil(wordCount / 220));
 
   return (
-    <div className="app-layout">
-      <HeroPanel
+    <TooltipProvider delayDuration={300}>
+      <div className="app-layout">
+        <HeroPanel
         documentName={documentName}
         saveStatus={saveStatus}
         modelStatus={modelValidation.summaryLabel}
@@ -488,7 +503,8 @@ const Tiptap = () => {
         onOpenChange={setNewArticleModalOpen}
         onSubmit={(slug, fm) => void handleCreateNewArticle(slug, fm)}
       />
-    </div>
+      </div>
+    </TooltipProvider>
   );
 };
 

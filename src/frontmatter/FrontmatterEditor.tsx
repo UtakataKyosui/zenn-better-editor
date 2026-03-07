@@ -93,6 +93,30 @@ export const FrontmatterEditor = ({
           onChange={(topics) => update({ topics })}
         />
       </div>
+
+      {/* Advanced Settings */}
+      <div className="zenn-header-preview__advanced-row">
+        <label className="zenn-header-preview__advanced-label">
+          <span>Publication Name</span>
+          <input
+            type="text"
+            className="zenn-header-preview__advanced-input"
+            value={data.publication_name ?? ''}
+            onChange={(e) => update({ publication_name: e.target.value || undefined })}
+            placeholder="e.g. your-publication"
+          />
+        </label>
+        <label className="zenn-header-preview__advanced-label">
+          <span>Published At</span>
+          <input
+            type="text"
+            className="zenn-header-preview__advanced-input"
+            value={data.published_at ?? ''}
+            onChange={(e) => update({ published_at: e.target.value || undefined })}
+            placeholder="YYYY-MM-DD hh:mm"
+          />
+        </label>
+      </div>
     </div>
   );
 };

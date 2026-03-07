@@ -3,7 +3,7 @@ import {
   parseFrontmatter,
   serializeFrontmatter,
   type ZennFrontmatter,
-} from '../../src/utils/frontmatter';
+} from '../../src/frontmatter/frontmatter';
 
 describe('parseFrontmatter', () => {
   it('should parse a complete frontmatter string', () => {
