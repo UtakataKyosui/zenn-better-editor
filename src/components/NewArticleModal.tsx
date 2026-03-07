@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { TopicTagInput } from '../frontmatter/TopicTagInput';
 import type { ZennFrontmatter } from '../frontmatter/frontmatter';
 
 type NewArticleModalProps = {
@@ -37,7 +38,7 @@ export const NewArticleModal = ({
   const [title, setTitle] = useState('');
   const [emoji, setEmoji] = useState('📝');
   const [type, setType] = useState<'tech' | 'idea'>('tech');
-  const [topicsInput, setTopicsInput] = useState('');
+  const [topics, setTopics] = useState<string[]>([]);
 
   const isSlugValid =
     slug.length >= 12 && slug.length <= 50 && SLUG_PATTERN.test(slug);
@@ -47,16 +48,11 @@ export const NewArticleModal = ({
     setTitle('');
     setEmoji('📝');
     setType('tech');
-    setTopicsInput('');
+    setTopics([]);
   };
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-
-    const topics = topicsInput
-      .split(',')
-      .map((t) => t.trim())
-      .filter(Boolean);
 
     onSubmit(slug, {
       title,
@@ -181,14 +177,12 @@ export const NewArticleModal = ({
             >
               トピック
             </label>
-            <Input
-              id="new-article-topics"
-              value={topicsInput}
-              onChange={(event) => setTopicsInput(event.target.value)}
-              placeholder="カンマ区切りで入力（例: react, typescript）"
+            <TopicTagInput
+              topics={topics}
+              onChange={setTopics}
             />
             <span className="new-article-modal__hint">
-              最大5個まで。カンマで区切ってください
+              最大5個まで。カンマまたはエンターで追加できます
             </span>
           </div>
 
