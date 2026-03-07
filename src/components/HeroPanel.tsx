@@ -14,9 +14,7 @@ type HeroPanelProps = {
   readingMinutes: number;
   isDark: boolean;
   onCreateNewDraft: () => void;
-  onOpenDocument: () => void;
   onSaveDocument: () => void;
-  onDownloadDocument: () => void;
   onToggleTheme: () => void;
 };
 
@@ -28,9 +26,7 @@ export const HeroPanel = ({
   readingMinutes,
   isDark,
   onCreateNewDraft,
-  onOpenDocument,
   onSaveDocument,
-  onDownloadDocument,
   onToggleTheme,
 }: HeroPanelProps) => {
   return (
@@ -45,14 +41,8 @@ export const HeroPanel = ({
         <Button variant="outline" size="sm" onClick={onCreateNewDraft}>
           New draft
         </Button>
-        <Button variant="outline" size="sm" onClick={onOpenDocument}>
-          Open .md
-        </Button>
         <Button variant="outline" size="sm" onClick={onSaveDocument}>
           Save
-        </Button>
-        <Button variant="outline" size="sm" onClick={onDownloadDocument}>
-          Download
         </Button>
         <TooltipProvider>
           <Tooltip>

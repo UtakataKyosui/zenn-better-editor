@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import markdownToHtml from 'zenn-markdown-html';
 import { ArticlesSidebar } from '../components/ArticlesSidebar';
 import { HeroPanel } from '../components/HeroPanel';
 import { HybridSurface } from '../components/HybridSurface';
-import { INITIAL_MARKDOWN, MARKDOWN_FILE_TYPES } from '../constants/editor';
+import { NewArticleModal } from '../components/NewArticleModal';
+import { INITIAL_MARKDOWN } from '../constants/editor';
+import type { ZennFrontmatter } from '../frontmatter/frontmatter';
 import {
   parseFrontmatter,
   serializeFrontmatter,
@@ -89,6 +91,9 @@ const Tiptap = () => {
   const [activeArticle, setActiveArticle] = useState<string | null>(null);
   const dirHandleRef = useRef<FileSystemDirectoryHandle | null>(null);
 
+  // ── New article modal state ──
+  const [newArticleModalOpen, setNewArticleModalOpen] = useState(false);
+
   useEffect(() => {
     const theme = isDark ? 'dark' : 'light';
     const html = document.documentElement;
@@ -99,7 +104,6 @@ const Tiptap = () => {
     localStorage.setItem('theme', theme);
   }, [isDark]);
   const fileHandleRef = useRef<FileSystemFileHandle | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const hasInitialHtmlResolvedRef = useRef(!shouldDeferInitialRender);
 
   const markdown = useMemo(() => {
@@ -238,63 +242,12 @@ const Tiptap = () => {
     }
   }, []);
 
-  const loadFromHandle = async (
-    handle: FileSystemFileHandle,
-    requestPermission: boolean,
-  ) => {
-    const canRead = await ensureHandlePermission(
-      handle,
-      'read',
-      requestPermission,
-    );
-    if (!canRead) {
-      setDocumentName(handle.name);
-      setSaveStatus(`Open .md to grant access: ${handle.name}`);
-      return false;
-    }
-
-    try {
-      const file = await handle.getFile();
-      const nextMarkdown = await file.text();
-      fileHandleRef.current = handle;
-      await saveRecentFileHandle(handle);
-      loadMarkdownDocument(nextMarkdown, handle.name);
-      return true;
-    } catch {
-      setSaveStatus(`Failed to load ${handle.name}`);
-      return false;
-    }
-  };
-
-  const readFile = async (file: File) => {
-    fileHandleRef.current = null;
-    await clearRecentFileHandle();
-    const nextMarkdown = await file.text();
-    loadMarkdownDocument(nextMarkdown, file.name);
-  };
-
-  const openDocument = async () => {
-    if (typeof window.showOpenFilePicker === 'function') {
-      try {
-        const [fileHandle] = await window.showOpenFilePicker({
-          excludeAcceptAllOption: false,
-          multiple: false,
-          types: MARKDOWN_FILE_TYPES,
-        });
-
-        if (fileHandle) {
-          await loadFromHandle(fileHandle, true);
-        }
-      } catch {
-        // user canceled
-      }
+  const createNewDraft = () => {
+    if (dirHandleRef.current) {
+      // Directory is open -> open the modal for new article creation
+      setNewArticleModalOpen(true);
       return;
     }
-
-    fileInputRef.current?.click();
-  };
-
-  const createNewDraft = () => {
     fileHandleRef.current = null;
     setActiveArticle(null);
     void clearRecentFileHandle();
@@ -337,17 +290,39 @@ const Tiptap = () => {
     loadMarkdownDocument(content, fileName);
   };
 
-  const downloadDocument = () => {
-    const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
+  const handleCreateNewArticle = useCallback(
+    async (fm: ZennFrontmatter) => {
+      if (!dirHandleRef.current) return;
 
-    anchor.href = url;
-    anchor.download = documentName;
-    anchor.click();
-    URL.revokeObjectURL(url);
-    setSaveStatus(`Downloaded ${documentName}`);
-  };
+      // Generate a random slug for Zenn articles
+      const slug = crypto.randomUUID().slice(0, 20).replace(/-/g, '');
+      const fileName = `${slug}.md`;
+
+      const defaultContent = `---\n${serializeFrontmatter(fm)}\n---\n\n`;
+
+      const saved = await saveFileToDirectory(
+        dirHandleRef.current,
+        fileName,
+        defaultContent,
+      );
+
+      if (!saved) {
+        setSaveStatus(`Failed to create ${fileName}`);
+        return;
+      }
+
+      // Refresh file list and select the new file
+      const files = await listMarkdownFiles(dirHandleRef.current);
+      setArticleFiles(files);
+      setActiveArticle(fileName);
+      fileHandleRef.current = null;
+      loadMarkdownDocument(defaultContent, fileName);
+      setSaveStatus(`Created ${fileName}`);
+      setNewArticleModalOpen(false);
+    },
+    [],
+  );
+
 
   const saveToHandle = async (handle: FileSystemFileHandle) => {
     const canWrite = await ensureHandlePermission(handle, 'readwrite', true);
@@ -418,17 +393,19 @@ const Tiptap = () => {
       try {
         const handle = await window.showSaveFilePicker({
           suggestedName: documentName,
-          types: MARKDOWN_FILE_TYPES,
+          types: [
+            {
+              description: 'Markdown files',
+              accept: { 'text/markdown': ['.md'], 'text/plain': ['.md'] },
+            },
+          ],
         });
 
         await saveToHandle(handle);
       } catch {
         // user canceled
       }
-      return;
     }
-
-    downloadDocument();
   };
 
   const wordCount = countWords(markdown);
@@ -444,9 +421,7 @@ const Tiptap = () => {
         readingMinutes={readingMinutes}
         isDark={isDark}
         onCreateNewDraft={createNewDraft}
-        onOpenDocument={() => void openDocument()}
         onSaveDocument={() => void saveDocument()}
-        onDownloadDocument={downloadDocument}
         onToggleTheme={() => setIsDark((d) => !d)}
       />
 
@@ -460,25 +435,10 @@ const Tiptap = () => {
           onOpenDirectory={() => void handleOpenDirectory()}
           onRefresh={() => void handleRefreshFiles()}
           onSelectFile={(f) => void handleSelectFile(f)}
+          onCreateNewArticle={() => setNewArticleModalOpen(true)}
         />
 
         <main className="editor-shell">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".md,text/markdown,text/plain"
-            hidden
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-
-              if (file) {
-                void readFile(file);
-              }
-
-              event.target.value = '';
-            }}
-          />
-
           <HybridSurface
             frontmatter={frontmatter}
             body={body}
@@ -495,6 +455,12 @@ const Tiptap = () => {
           />
         </main>
       </div>
+
+      <NewArticleModal
+        open={newArticleModalOpen}
+        onOpenChange={setNewArticleModalOpen}
+        onSubmit={(fm) => void handleCreateNewArticle(fm)}
+      />
     </div>
   );
 };

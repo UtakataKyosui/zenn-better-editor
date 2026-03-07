@@ -1,4 +1,4 @@
-import { FileText, FolderOpen, RefreshCw, PanelLeftClose, PanelLeft } from 'lucide-react';
+import { FileText, FolderOpen, RefreshCw, PanelLeftClose, PanelLeft, FilePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -15,6 +15,7 @@ type ArticlesSidebarProps = {
   onOpenDirectory: () => void;
   onRefresh: () => void;
   onSelectFile: (fileName: string) => void;
+  onCreateNewArticle: () => void;
 };
 
 export const ArticlesSidebar = ({
@@ -26,6 +27,7 @@ export const ArticlesSidebar = ({
   onOpenDirectory,
   onRefresh,
   onSelectFile,
+  onCreateNewArticle,
 }: ArticlesSidebarProps) => {
   return (
     <div className={`articles-sidebar-wrapper ${isOpen ? 'articles-sidebar-wrapper--open' : ''}`}>
@@ -46,6 +48,21 @@ export const ArticlesSidebar = ({
                   variant="ghost"
                   size="sm"
                   className="articles-sidebar__btn"
+                  onClick={onCreateNewArticle}
+                  disabled={!directoryName}
+                  aria-label="新規記事を作成"
+                >
+                  <FilePlus size={14} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">新規作成</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="articles-sidebar__btn"
                   onClick={onRefresh}
                   disabled={!directoryName}
                   aria-label="ファイル一覧を更新"
@@ -53,7 +70,7 @@ export const ArticlesSidebar = ({
                   <RefreshCw size={14} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>更新</TooltipContent>
+              <TooltipContent side="bottom">更新</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -66,7 +83,7 @@ export const ArticlesSidebar = ({
                   <PanelLeftClose size={16} />
                 </button>
               </TooltipTrigger>
-              <TooltipContent>サイドバーを閉じる</TooltipContent>
+              <TooltipContent side="bottom">閉じる</TooltipContent>
             </Tooltip>
           </div>
         </div>
