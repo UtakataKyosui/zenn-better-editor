@@ -189,7 +189,8 @@
 body {
   margin: 0;
   min-width: 320px;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 button,
@@ -204,14 +205,14 @@ button {
 }
 
 #root {
-  min-height: 100vh;
+  height: 100vh;
 }
 
 /* ── Top bar ── */
 .app-layout {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100%;
 }
 
 .app-body {
@@ -652,6 +653,7 @@ button {
   width: min(1400px, calc(100% - 32px));
   margin: 0 auto;
   padding: 24px 0 40px;
+  overflow-y: auto;
 }
 
 .panel {
