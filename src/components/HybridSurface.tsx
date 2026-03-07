@@ -1,3 +1,5 @@
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useState } from 'react';
 import { FrontmatterEditor } from '../frontmatter/FrontmatterEditor';
 import { TiptapEditor } from '../tiptap/TiptapEditor';
 
@@ -18,13 +20,30 @@ export const HybridSurface = ({
   onChangeFrontmatter,
   onChangeBody,
 }: HybridSurfaceProps) => {
+  const [isYamlCollapsed, setIsYamlCollapsed] = useState(false);
+
   return (
     <section className="workspace-column">
-      <section className="panel panel--yaml" aria-label="YAML section">
-        <FrontmatterEditor
-          frontmatter={frontmatter}
-          onChange={onChangeFrontmatter}
-        />
+      <section
+        className={`panel panel--yaml ${isYamlCollapsed ? 'panel--yaml-collapsed' : ''}`}
+        aria-label="YAML section"
+      >
+        <button
+          className="yaml-toggle-btn"
+          onClick={() => setIsYamlCollapsed(!isYamlCollapsed)}
+          aria-label={isYamlCollapsed ? "設定を開く" : "設定を閉じる"}
+        >
+          {isYamlCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+          <span className="yaml-toggle-btn__text">
+            {isYamlCollapsed ? '表示' : '隠す'}
+          </span>
+        </button>
+        {!isYamlCollapsed && (
+          <FrontmatterEditor
+            frontmatter={frontmatter}
+            onChange={onChangeFrontmatter}
+          />
+        )}
       </section>
 
       <section className="panel panel--editor" aria-label="Editor">

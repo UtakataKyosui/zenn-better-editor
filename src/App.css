@@ -653,7 +653,9 @@ button {
   width: min(1400px, calc(100% - 32px));
   margin: 0 auto;
   padding: 24px 0 40px;
-  overflow-y: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .panel {
@@ -686,6 +688,8 @@ button {
   display: flex;
   flex-direction: column;
   gap: 0;
+  flex: 1;
+  min-height: 0;
 }
 
 .panel {
@@ -699,15 +703,54 @@ button {
   border-radius: 24px 24px 0 0;
   border-bottom: none;
   background: linear-gradient(180deg, #0b1628 0%, #0f1f3a 60%, #0d1a32 100%);
+  position: relative;
+  transition: border-radius 0.2s ease, margin-bottom 0.2s ease;
+}
+
+.panel--yaml-collapsed {
+  border-radius: 24px;
+  margin-bottom: 20px;
+  min-height: 48px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.yaml-toggle-btn {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 10;
+}
+
+.yaml-toggle-btn:hover {
+  background: rgba(0, 0, 0, 0.4);
+  color: #e2e8f0;
 }
 
 .panel--editor {
   padding: 0;
   overflow: hidden;
-  background: #fff;
+  background: transparent;
   color: #0f172a;
   border-radius: 0 0 24px 24px;
   border-top: none;
+  border: none;
+  box-shadow: none;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .preview-panel {
@@ -1054,10 +1097,11 @@ button {
 }
 
 .tiptap-scroll-container {
-  max-height: 70vh;
+  height: 100%;
   overflow-y: auto;
-  background: #fff;
-  color: #0f172a;
+  background: transparent;
+  color: inherit;
+  flex: 1;
 }
 
 .tiptap-table-toolbar {
@@ -1944,10 +1988,10 @@ html[data-theme="light"] body {
 
 /* panel--editor のライトモード */
 [data-theme="light"] .panel--editor {
-  background: #fff;
+  background: transparent;
   color: #0f172a;
-  border-color: rgba(0, 0, 0, 0.07);
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+  border-color: transparent;
+  box-shadow: none;
 }
 
 [data-theme="light"] .source-editor--wysiwyg {
@@ -1963,8 +2007,10 @@ html[data-theme="light"] body {
 /* ── Dark mode editor ── */
 
 [data-theme="dark"] .panel--editor {
-  background: #0d223a;
+  background: transparent;
   color: #e2e8f0;
+  border-color: transparent;
+  box-shadow: none;
 }
 
 [data-theme="dark"] .source-editor--wysiwyg {
